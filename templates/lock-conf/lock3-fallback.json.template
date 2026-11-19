@@ -1,0 +1,11 @@
+{
+    "minRules":  "chat:称呼脑公|短句口语|低档思考; work:改前备份|改后留痕|花销先说|干活档不许拦",
+    "heartbeatStaleMin":  30,
+    "logPath":  "F:/crystal-l0/l0.log",
+    "updatedAt":  "2026-11-18T21:38:00+08:00",
+    "writer":  "alice",
+    "staleTimes":  {
+                       "l0":  64800
+                   },
+    "schemaVersion":  1
+}

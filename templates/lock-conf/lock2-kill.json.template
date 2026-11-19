@@ -1,0 +1,11 @@
+{
+    "intervalSec":  120,
+    "killFile":  "F:/crystal-kill/kill",
+    "logPath":  "F:/crystal-kill/kill.log",
+    "updatedAt":  "2026-11-18T21:38:00+08:00",
+    "writer":  "alice",
+    "staleTimes":  {
+                       "kill":  360
+                   },
+    "schemaVersion":  1
+}

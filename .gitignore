@@ -1,0 +1,6 @@
+data/creation-log/*
+assets/pet/catgirl.png
+release/
+*.bak*
+node_modules/
+*.zip

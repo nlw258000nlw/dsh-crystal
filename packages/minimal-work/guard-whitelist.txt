@@ -1,0 +1,3 @@
+# 守卫白名单示例（SnowLuma-Guard）：把下面几项加进白名单，别让看门狗误杀 crystal 的任务
+# 计划任务：CrystalL0-Stamp / CrystalDaily-Doctor / CrystalDaily-Scan / CrystalKillSwitch
+# 锁目录：<CRYSTAL_HOME> / <CRYSTAL_HOME>-kill / <CRYSTAL_HOME>-l0

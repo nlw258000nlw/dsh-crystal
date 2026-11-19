@@ -1,0 +1,11 @@
+{
+    "timeoutSec":  120,
+    "maxSameFault":  3,
+    "logPath":  "C:/Users/丽微/.dsh/plugins/dsh-crystal/data/crystal/alerts.log",
+    "updatedAt":  "2026-11-18T21:38:00+08:00",
+    "writer":  "alice",
+    "staleTimes":  {
+                       "selfstop":  3600
+                   },
+    "schemaVersion":  1
+}

@@ -1,0 +1,13 @@
+{
+  "_crystal_note": "桥 config.json 增补片段（参数化，<X> 为占位符，安装时替换）",
+  "socialV2": {
+    "sendFallback": { "enabled": false },
+    "mode": "chat",
+    "agentHome": "<BRIDGE_HOME>\\qq-bridge",
+    "dshBaseUrl": "http://127.0.0.1:<GUI_PORT>"
+  },
+  "crystal": {
+    "dataHome": "<CRYSTAL_HOME>\\data",
+    "pluginHome": "<USER_HOME>\\.dsh\\plugins\\dsh-crystal"
+  }
+}

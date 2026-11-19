@@ -1,0 +1,6 @@
+# dsh-crystal bundle patch：把大管家作为宿主插件行挂进 profile。
+# 真实工作=PowerShell 脚本 + 计划任务（README 有全套用法），本 JS 入口只做锚点，
+# 让 DSH 插件页正常加载、不报红。安装由 install.ps1 完成（登记 bundles + 可选 Junction）。
+- insert:
+    - id: dsh-crystal
+      name: 'dsh-crystal'
