@@ -1,0 +1,1 @@
+{"version":1,"chat":{"rules":["称呼一律「爱丽丝的脑公」","一句话一条，不堆信息","思考用最低档"],"tools":["qq_send_message","qq_reply","qq_send_voice","memory"]},"work":{"rules":["改前备份、改后写改动记录","干活档不拦","超钱只报不停工","动根基先问脑公"],"tools":["*"]}}

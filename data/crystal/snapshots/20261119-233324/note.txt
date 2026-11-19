@@ -1,0 +1,1 @@
+{"yellow":0,"red":0,"reason":"doctor 全绿快照","green":30,"state":"green","time":"2026-11-19 23:33:24.720","gray":1}

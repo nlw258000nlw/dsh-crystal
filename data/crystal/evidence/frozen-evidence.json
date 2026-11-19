@@ -1,0 +1,112 @@
+{
+    "version":  1,
+    "faults":  [
+                   {
+                       "id":  "bom-truth",
+                       "module":  "truth.json",
+                       "symptom":  "truth.json 带 BOM 或非法 UTF-8，解析不了",
+                       "detect":  "读 data\\crystal\\truth.json 首 3 字节；=EF BB BF 或 JSON.parse 失败即命中",
+                       "fix":  {
+                                   "kind":  "auto",
+                                   "steps":  [
+                                                 "落快照",
+                                                 "去 BOM 按 UTF8(无BOM) 重写",
+                                                 "node JSON.parse 复验"
+                                             ]
+                               },
+                       "verify":  "首字节 != 0xEF 且 node -e require 解析通过",
+                       "frozen":  true,
+                       "frozenAt":  "2026-11-18 19:43:35",
+                       "frozenReason":  "自动修复失败：truth.json 带 BOM 或非法 JSON",
+                       "loc":  "data\\crystal\\truth.json 首3字节"
+                   },
+                   {
+                       "id":  "gui-port",
+                       "module":  "truth.health.guiPort",
+                       "symptom":  "表里 GUI 端口不是真 DSH GUI",
+                       "detect":  "对 health.guiPort 做 GET /api/__probe__；回 401 纯文本=对；401 JSON / 404 / 连不通=命中",
+                       "fix":  {
+                                   "kind":  "auto",
+                                   "steps":  [
+                                                 "落快照",
+                                                 "扫描 DSH 监听端口找 401 纯文本者",
+                                                 "写回 health.guiPort"
+                                             ]
+                               },
+                       "verify":  "新端口 GET /api/__probe__ 回 401 纯文本",
+                       "frozen":  false,
+                       "frozenAt":  "",
+                       "frozenReason":  "",
+                       "loc":  "data\\crystal\\truth.json health.guiPort"
+                   },
+                   {
+                       "id":  "snowluma-pipe",
+                       "module":  "snowluma-pipe",
+                       "symptom":  "QQ.exe 进程在但 OneBot 3000 不通（管道没注入）",
+                       "detect":  "查 QQ.exe 进程存在 且 Test-NetConnection 127.0.0.1 -Port health.onebotHttp 不通",
+                       "fix":  {
+                                   "kind":  "manual",
+                                   "steps":  [
+                                                 "提示人工跑 F:\\系统维护\\snowluma-reinject.vbs 或桌面『接回爱丽丝』"
+                                             ]
+                               },
+                       "verify":  "3000 可连且 GET /api/connections 有 uin=2670293119",
+                       "frozen":  false,
+                       "frozenAt":  "",
+                       "frozenReason":  "",
+                       "loc":  "OneBot ws://127.0.0.1:3001"
+                   },
+                   {
+                       "id":  "stamp-starvation",
+                       "module":  "stamps",
+                       "symptom":  "今日外盖戳缺失或超 30 小时断供",
+                       "detect":  "读 stamps\\\u003cyyyyMMdd\u003e.jsonl 最后一行 ts；超 health.stampMaxAgeHours 或文件不存在",
+                       "fix":  {
+                                   "kind":  "none",
+                                   "steps":  [
+                                                 "只报灰/红，禁止 crystal 自补；由 L0 CrystalL0-Stamp 写戳"
+                                             ]
+                               },
+                       "verify":  "跑 scripts\\stamp.ps1 后今日行存在且 ts 新鲜",
+                       "frozen":  false,
+                       "frozenAt":  "",
+                       "frozenReason":  "",
+                       "loc":  "data\\crystal\\stamps\\\u003cyyyyMMdd\u003e.jsonl"
+                   },
+                   {
+                       "id":  "heartbeat",
+                       "module":  "heartbeat",
+                       "symptom":  "crystal 心跳超时未更新",
+                       "detect":  "data\\crystal\\heartbeat.txt 的 mtime 距今 \u003e health.heartbeatMinutes",
+                       "fix":  {
+                                   "kind":  "none",
+                                   "steps":  [
+                                                 "报红提示 crystal 未运行/卡死，交人"
+                                             ]
+                               },
+                       "verify":  "心跳文件 mtime 新鲜",
+                       "frozen":  false,
+                       "frozenAt":  "",
+                       "frozenReason":  "",
+                       "loc":  "data\\crystal\\heartbeat.txt"
+                   },
+                   {
+                       "id":  "fallback",
+                       "module":  "fallback.json",
+                       "symptom":  "L0 兜底表缺失或坏",
+                       "detect":  "data\\fallback.json 不存在或 JSON.parse 失败",
+                       "fix":  {
+                                   "kind":  "auto",
+                                   "steps":  [
+                                                 "落快照",
+                                                 "从内置最小模板重写 data\\fallback.json"
+                                             ]
+                               },
+                       "verify":  "JSON.parse 通过且含 chat/work 两段",
+                       "frozen":  false,
+                       "frozenAt":  "",
+                       "frozenReason":  "",
+                       "loc":  "data\\fallback.json"
+                   }
+               ]
+}

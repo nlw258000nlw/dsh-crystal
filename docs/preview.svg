@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0f172a"/>
+      <stop offset="1" stop-color="#1e3a8a"/>
+    </linearGradient>
+    <linearGradient id="cry" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#7dd3fc"/>
+      <stop offset="1" stop-color="#2563eb"/>
+    </linearGradient>
+  </defs>
+  <rect width="640" height="360" fill="url(#bg)"/>
+  <path d="M320 60 L470 150 V260 L320 340 L170 260 V150 Z" fill="url(#cry)"/>
+  <path d="M320 60 L470 150 L320 210 L170 150 Z" fill="#e0f2fe" opacity="0.35"/>
+  <text x="320" y="190" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="44" font-weight="700" fill="#ffffff">dsh-crystal</text>
+  <text x="320" y="236" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="22" fill="#bae6fd">21 项体检 · 三锁自愈 · 按需调度 · 早报 · 桌宠</text>
+  <text x="320" y="286" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="16" fill="#7dd3fc">doctor 0红0黄20绿1灰 — 装好就不用管</text>
+</svg>

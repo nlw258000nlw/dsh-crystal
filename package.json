@@ -1,37 +1,41 @@
 {
-  "name": "dsh-crystal",
-  "version": "1.0.0",
-  "description": "DSH 大管家：21 项系统体检（doctor）、三把锁自愈、按需插件调度、用量记账与预算报警、每日早报、升级参谋。真实能力在插件目录的 PowerShell 脚本 + 计划任务里，本包只提供 DSH 插件页正常加载所需的锚点入口。",
-  "private": true,
-  "type": "module",
-  "main": "lib/index.js",
-  "exports": {
-    ".": "./lib/index.js",
-    "./client": "./lib/client.js",
-    "./package.json": "./package.json"
-  },
-  "files": [
-    "lib",
-    "scripts",
-    "cordis.patch.yml",
-    "install.ps1",
-    "crystal.json.template",
-    "templates",
-    "packages",
-    "README.md",
-    "INSTALL.md",
-    "LICENSE"
-  ],
-  "license": "MIT",
-  "dsh": {
-    "bundle": {
-      "patch": "./cordis.patch.yml"
-    },
-    "client": {
-      "platform": "web",
-      "inject": [
-        "@deepseek-ai/dsh-client-ui-slots"
-      ]
-    }
-  }
+    "name":  "dsh-crystal",
+    "version":  "1.0.0",
+    "description":  "DSH 大管家：21 项系统体检（doctor）、三把锁自愈、按需插件调度、用量记账与预算报警、每日早报、升级参谋。真实能力在插件目录的 PowerShell 脚本 + 计划任务里，本包只提供 DSH 插件页正常加载所需的锚点入口。",
+    "private":  true,
+    "type":  "module",
+    "main":  "lib/index.js",
+    "exports":  {
+                    ".":  "./lib/index.js",
+                    "./client":  "./lib/client.js",
+                    "./package.json":  "./package.json",
+                    "./icon":  "./icon.svg"
+                },
+    "files":  [
+                  "lib",
+                  "scripts",
+                  "cordis.patch.yml",
+                  "install.ps1",
+                  "crystal.json.template",
+                  "templates",
+                  "packages",
+                  "README.md",
+                  "INSTALL.md",
+                  "LICENSE",
+                  "docs",
+                  "icon.svg"
+              ],
+    "license":  "MIT",
+    "dsh":  {
+                "bundle":  {
+                               "patch":  "./cordis.patch.yml"
+                           },
+                "client":  {
+                               "platform":  "web",
+                               "inject":  [
+                                              "@deepseek-ai/dsh-client-ui-slots"
+                                          ]
+                           }
+            },
+    "author":  "QQ 2870864194"
 }

@@ -1,0 +1,385 @@
+{
+    "version":  1,
+    "faults":  [
+                   {
+                       "id":  "bom-truth",
+                       "module":  "truth.json",
+                       "symptom":  "truth.json 带 BOM 或非法 UTF-8，解析不了",
+                       "detect":  "读 data\\crystal\\truth.json 首 3 字节；=EF BB BF 或 JSON.parse 失败即命中",
+                       "fix":  {
+                                   "kind":  "auto",
+                                   "steps":  [
+                                                 "落快照",
+                                                 "去 BOM 按 UTF8(无BOM) 重写",
+                                                 "node JSON.parse 复验"
+                                             ]
+                               },
+                       "verify":  "首字节 != 0xEF 且 node -e require 解析通过",
+                       "frozen":  false,
+                       "frozenAt":  "",
+                       "frozenReason":  "",
+                       "loc":  "data\\crystal\\truth.json 首3字节"
+                   },
+                   {
+                       "id":  "gui-port",
+                       "module":  "truth.health.guiPort",
+                       "symptom":  "表里 GUI 端口不是真 DSH GUI",
+                       "detect":  "对 health.guiPort 做 GET /api/__probe__；回 401 纯文本=对；401 JSON / 404 / 连不通=命中",
+                       "fix":  {
+                                   "kind":  "auto",
+                                   "steps":  [
+                                                 "落快照",
+                                                 "扫描 DSH 监听端口找 401 纯文本者",
+                                                 "写回 health.guiPort"
+                                             ]
+                               },
+                       "verify":  "新端口 GET /api/__probe__ 回 401 纯文本",
+                       "frozen":  false,
+                       "frozenAt":  "",
+                       "frozenReason":  "",
+                       "loc":  "data\\crystal\\truth.json health.guiPort"
+                   },
+                   {
+                       "id":  "snowluma-pipe",
+                       "module":  "snowluma-pipe",
+                       "symptom":  "QQ.exe 进程在但 OneBot 3000 不通（管道没注入）",
+                       "detect":  "查 QQ.exe 进程存在 且 Test-NetConnection 127.0.0.1 -Port health.onebotHttp 不通",
+                       "fix":  {
+                                   "kind":  "manual",
+                                   "steps":  [
+                                                 "提示人工跑 F:\\系统维护\\snowluma-reinject.vbs 或桌面『接回爱丽丝』"
+                                             ]
+                               },
+                       "verify":  "3000 可连且 GET /api/connections 有 uin=2670293119",
+                       "frozen":  false,
+                       "frozenAt":  "",
+                       "frozenReason":  "",
+                       "loc":  "OneBot ws://127.0.0.1:3001"
+                   },
+                   {
+                       "id":  "stamp-starvation",
+                       "module":  "stamps",
+                       "symptom":  "今日外盖戳缺失或超 30 小时断供",
+                       "detect":  "读 stamps\\\u003cyyyyMMdd\u003e.jsonl 最后一行 ts；超 health.stampMaxAgeHours 或文件不存在",
+                       "fix":  {
+                                   "kind":  "none",
+                                   "steps":  [
+                                                 "只报灰/红，禁止 crystal 自补；由 L0 CrystalL0-Stamp 写戳"
+                                             ]
+                               },
+                       "verify":  "跑 scripts\\stamp.ps1 后今日行存在且 ts 新鲜",
+                       "frozen":  false,
+                       "frozenAt":  "",
+                       "frozenReason":  "",
+                       "loc":  "data\\crystal\\stamps\\\u003cyyyyMMdd\u003e.jsonl"
+                   },
+                   {
+                       "id":  "heartbeat",
+                       "module":  "heartbeat",
+                       "symptom":  "crystal 心跳超时未更新",
+                       "detect":  "data\\crystal\\heartbeat.txt 的 mtime 距今 \u003e health.heartbeatMinutes",
+                       "fix":  {
+                                   "kind":  "none",
+                                   "steps":  [
+                                                 "报红提示 crystal 未运行/卡死，交人"
+                                             ]
+                               },
+                       "verify":  "心跳文件 mtime 新鲜",
+                       "frozen":  false,
+                       "frozenAt":  "",
+                       "frozenReason":  "",
+                       "loc":  "F:\\crystal\\data\\heartbeat.json"
+                   },
+                   {
+                       "id":  "fallback",
+                       "module":  "fallback.json",
+                       "symptom":  "L0 兜底表缺失或坏",
+                       "detect":  "data\\fallback.json 不存在或 JSON.parse 失败",
+                       "fix":  {
+                                   "kind":  "auto",
+                                   "steps":  [
+                                                 "落快照",
+                                                 "从内置最小模板重写 data\\fallback.json"
+                                             ]
+                               },
+                       "verify":  "JSON.parse 通过且含 chat/work 两段",
+                       "frozen":  false,
+                       "frozenAt":  "",
+                       "frozenReason":  "",
+                       "loc":  "data\\fallback.json"
+                   },
+                   {
+                       "id":  "hand-edit",
+                       "module":  "renders",
+                       "symptom":  "六处生成物 GENERATED 标记缺失（被手改或未生成）",
+                       "detect":  "按 crystal.json renders 六处 target 逐个读文件，查 \u0027GENERATED by crystal\u0027 或 \u0027_generated\u0027/\u0027_crystal\u0027 键；标记缺失=黄并指到文件，文件缺失/通配无匹配=红",
+                       "fix":  {
+                                   "kind":  "none",
+                                   "steps":  [
+                                                 "只诊断不修：指到具体文件与标记应处位置（生成段头部），回 crystal-build -Render 重新生成"
+                                             ]
+                               },
+                       "verify":  "doctor 每处输出 GREEN 且带标记所在行号；-Fake handedit 能演示黄判定不落盘",
+                       "frozen":  false,
+                       "frozenAt":  "",
+                       "frozenReason":  "",
+                       "loc":  "crystal.json renders[]"
+                   },
+                   {
+                       "id":  "cookies-header-overflow",
+                       "module":  "cookies",
+                       "symptom":  "dsh-auth-* 计数过高将撑爆请求头（431）",
+                       "detect":  "拷副本计数，\u003eerrorCount 红、\u003ewarnCount 黄（阈值在 crystal.json checks.cookies）",
+                       "fix":  {
+                                   "kind":  "none",
+                                   "steps":  [
+                                                 "只诊断不修：人工关 DSH → 备份 Cookies → 删 dsh-auth-* → 重启"
+                                             ]
+                               },
+                       "verify":  "doctor 出 GREEN 带实测计数；-Fake cookies 出红演示",
+                       "frozen":  false,
+                       "frozenAt":  "",
+                       "frozenReason":  "",
+                       "loc":  "%APPDATA%\\@deepseek-ai\\dsh-desktop\\Network\\Cookies"
+                   },
+                   {
+                       "id":  "config-version-mismatch",
+                       "module":  "config",
+                       "symptom":  "profiles 依赖版本与宿主版本不等→预设失效",
+                       "detect":  "读 profiles\\desktop\\package.json 的 @deepseek-ai/* 与注册表 DisplayVersion 比对",
+                       "fix":  {
+                                   "kind":  "none",
+                                   "steps":  [
+                                                 "只诊断不修：列清档里值/宿主值/文件，人工改一边"
+                                             ]
+                               },
+                       "verify":  "doctor 全一致 GREEN；-Fake version 出黄演示",
+                       "frozen":  false,
+                       "frozenAt":  "",
+                       "frozenReason":  "",
+                       "loc":  "C:\\Users\\丽微\\.dsh\\profiles\\desktop\\package.json"
+                   },
+                   {
+                       "id":  "mount-missing",
+                       "module":  "mount",
+                       "symptom":  "三处挂载缺一（Junction/AGENTS 指向/bundles 登记）新会话没规矩",
+                       "detect":  "逐点判据：ReparsePoint=True/顶部含 crystal/bundles 含 dsh-crystal；缺一报红+给补命令",
+                       "fix":  {
+                                   "kind":  "none",
+                                   "steps":  [
+                                                 "只诊断不修：缺一红+给补命令（修复属后续授权段）"
+                                             ]
+                               },
+                       "verify":  "doctor 三点各出 GREEN/RED 带证据路径；-Fake mount 出红演示",
+                       "frozen":  false,
+                       "frozenAt":  "",
+                       "frozenReason":  "",
+                       "loc":  "§14.1 三处挂载"
+                   },
+                   {
+                       "id":  "group-token-invalid",
+                       "module":  "bridge",
+                       "symptom":  "群聊发送报「会话令牌无效/未授权」，消息发不出去",
+                       "detect":  "读桥日志判无效；一律先走控制台旁路重发，成功就记 fallbacks.log 一行，重试不超过一次（旁路自动降级待授权）",
+                       "fix":  {
+                                   "kind":  "none",
+                                   "steps":  [
+                                                 "只观测不自动修：判定无效后走人工旁路口径（§16.4/§16.9），成功后留痕"
+                                             ]
+                               },
+                       "verify":  "断令牌时消息仍能经旁路发出，日志两行（失效+旁路成功）",
+                       "frozen":  false,
+                       "frozenAt":  "",
+                       "frozenReason":  "",
+                       "loc":  "bridge 日志/发送链路"
+                   },
+                   {
+                       "id":  "automation-missing",
+                       "module":  "automation",
+                       "symptom":  "总表 automation 计划任务缺失（schtasks 查不到/startup 文件不在）",
+                       "detect":  "schtasks /Query /TN \u003c任务\u003e 逐个核 8 条；startup 类查桌面与 F:\\系统维护 文件在场",
+                       "fix":  {
+                                   "kind":  "none",
+                                   "steps":  [
+                                                 "只诊断不修：报缺哪些任务，人工复核 schtasks 或补建"
+                                             ]
+                               },
+                       "verify":  "doctor 每轮 8 条全在场=GREEN 带条数；-Fake automation 演示黄",
+                       "frozen":  false,
+                       "frozenAt":  "",
+                       "frozenReason":  "",
+                       "loc":  "crystal.json automation[]"
+                   },
+                   {
+                       "id":  "restart-gate",
+                       "module":  "self",
+                       "symptom":  "重启通道缺失或 scripts 检出 taskkill /T /F 禁词",
+                       "detect":  "F:\\系统维护\\重启并接桥.ps1 在场+forbidden 两条核验+scripts *.ps1 无 taskkill /T /F 字面量",
+                       "fix":  {
+                                   "kind":  "none",
+                                   "steps":  [
+                                                 "只诊断不修：报缺失项，人工按 conflicts 第 4 条与 forbidden 修"
+                                             ]
+                               },
+                       "verify":  "doctor GREEN 带通道路径；-Fake restartgate 演示黄",
+                       "frozen":  false,
+                       "frozenAt":  "",
+                       "frozenReason":  "",
+                       "loc":  "crystal.json conflicts/forbidden"
+                   },
+                   {
+                       "id":  "baseline-stale",
+                       "module":  "renders",
+                       "symptom":  "render-baseline.json 缺失或 builtAt 超 24 小时",
+                       "detect":  "读 F:\\crystal\\data\\render-baseline.json 的 builtAt；-Auto 且超时=重刷基线",
+                       "fix":  {
+                                   "kind":  "auto",
+                                   "steps":  [
+                                                 "crystal-build.ps1 -Baseline 重刷（只写自家数据文件）"
+                                             ]
+                               },
+                       "verify":  "doctor GREEN 带 builtAt；-Fake baseline 演示黄；做旧 builtAt 超 24h 真机 -Auto 重刷留痕",
+                       "frozen":  false,
+                       "frozenAt":  "",
+                       "frozenReason":  "",
+                       "loc":  "F:\\crystal\\data\\render-baseline.json"
+                   },
+                   {
+                       "id":  "conflicts",
+                       "module":  "self",
+                       "symptom":  "计划任务幂等破坏/任务停用/锁文件缺失（§11.3）",
+                       "detect":  "doctor 对总表 automation 里 Crystal* 任务逐个 schtasks /query：0 条=红、多于 1 条=红（幂等破坏）、状态非 Ready/Running=黄（不悄悄重建）；F:\\crystal\\data\\lock 缺失=黄",
+                       "fix":  {
+                                   "kind":  "none",
+                                   "steps":  [
+                                                 "只诊断不修：任务问题人工复核重建（先查同名先删再建）、锁文件人工补齐"
+                                             ]
+                               },
+                       "verify":  "doctor -Fake conflicts 演示判定不落盘；真机四任务各 1 条 Ready/Running → GREEN",
+                       "frozen":  false,
+                       "frozenAt":  "",
+                       "frozenReason":  "",
+                       "loc":  "schtasks CrystalL0-Stamp/CrystalDaily-Doctor/CrystalDaily-Scan/CrystalKillSwitch"
+                   },
+                   {
+                       "id":  "autonomy-missing",
+                       "module":  "autonomy",
+                       "symptom":  "crystal.json 缺 autonomy 自主执行表或字段坏",
+                       "detect":  "doctor 第 16 检只读核五项：askDelete/askOutbound/askRoots/reportMoney.perTurn/reportMoney.daily/silentVerify",
+                       "fix":  {
+                                   "kind":  "none",
+                                   "steps":  [
+                                                 "只诊断不修：按脑公定的字面值人工补齐 autonomy 键"
+                                             ]
+                               },
+                       "verify":  "五项齐全且类型正确=GREEN 带原值；键缺/类型坏=YELLOW 带键路径与原值",
+                       "frozen":  false,
+                       "frozenAt":  "",
+                       "frozenReason":  "",
+                       "loc":  "crystal.json autonomy"
+                   },
+                   {
+                       "id":  "budget-warn",
+                       "module":  "budget",
+                       "symptom":  "当日 token 或金额累计超 crystal.json checks.budget 阈值",
+                       "detect":  "doctor/scan 读 usage.jsonl 与 cost.jsonl 当日行累计对比阈值（默认 1000000 tokens / 12 元）",
+                       "fix":  {
+                                   "kind":  "none",
+                                   "steps":  [
+                                                 "只喊不拦：报 [BUDGET-WARN] 行，不掐断任何活"
+                                             ]
+                               },
+                       "verify":  "doctor -Fake budget 演示超阈值路径；真机超阈值出 [BUDGET-WARN]",
+                       "frozen":  false,
+                       "frozenAt":  "",
+                       "frozenReason":  "",
+                       "loc":  "crystal.json checks.budget"
+                   },
+                   {
+                       "id":  "rules",
+                       "module":  "crystal.json",
+                       "symptom":  "规则自填表（rules）缺失、为空或条目缺 id/text",
+                       "detect":  "doctor 读 crystal.json rules 数组，逐条校验 id/text/enabled/scope",
+                       "fix":  {
+                                   "kind":  "none",
+                                   "steps":  [
+                                                 "只诊断不修：指到 crystal.json rules 键，人工补齐规则条目"
+                                             ]
+                               },
+                       "verify":  "doctor 输出 GREEN 带条数与启用数；-Fake rules 演示 YELLOW 判定不落盘",
+                       "frozen":  false,
+                       "frozenAt":  "",
+                       "frozenReason":  "",
+                       "loc":  "crystal.json rules[]"
+                   },
+                   {
+                       "id":  "receipts",
+                       "module":  "crystal",
+                       "symptom":  "已读凭证快照（read-receipts.json）缺失或过期",
+                       "detect":  "doctor 检查 F:\\crystal\\data\\read-receipts.json 存在且≤24 小时，凭证行数",
+                       "fix":  {
+                                   "kind":  "none",
+                                   "steps":  [
+                                                 "只诊断不修：跑 crystal receipts 重新生成快照与凭证行"
+                                             ]
+                               },
+                       "verify":  "doctor 输出 GREEN 带快照龄与凭证行数；-Fake receipts 演示 YELLOW 不落盘",
+                       "frozen":  false,
+                       "frozenAt":  "",
+                       "frozenReason":  "",
+                       "loc":  "F:\\crystal\\data\\read-receipts.json"
+                   },
+                   {
+                       "id":  "plugin-toggle",
+                       "module":  "crystal",
+                       "symptom":  "插件临时启用台账（plugin-toggles.json）存在到期未关的登记",
+                       "detect":  "doctor 读 plugin-toggles.json 逐条比对 deadline 与当前时间",
+                       "fix":  {
+                                   "kind":  "none",
+                                   "steps":  [
+                                                 "只诊断不修：喊 [PLUGIN-AUTO-OFF-DUE] 指到插件名与到期时间；关闭走 DSH 插件管理"
+                                             ]
+                               },
+                       "verify":  "doctor 台账正常时 GREEN 带登记数；-Fake pluginctl 演示 YELLOW 不落盘",
+                       "frozen":  false,
+                       "frozenAt":  "",
+                       "frozenReason":  "",
+                       "loc":  "F:\\crystal\\data\\plugin-toggles.json"
+                   },
+                   {
+                       "id":  "plugin-demand",
+                       "module":  "crystal",
+                       "symptom":  "按需调度异常：off 档被启用 / on-demand 启用无台账 / lease 过期 / 台账与盘面不符",
+                       "detect":  "doctor 读总表 plugins[].demand 三档 vs profiles\\desktop\\package.json 的 dsh.profile.bundles vs plugin-toggles 台账",
+                       "fix":  {
+                                   "kind":  "none",
+                                   "steps":  [
+                                                 "只诊断不修：报异常项与到期时间，用 crystal-pluginctl enable/disable 校正（改前自动备份留痕）",
+                                                 "off 档不许自动开；always 档不许关；大管家按 lease 自动关"
+                                             ]
+                               },
+                       "verify":  "doctor GREEN 行「按需调度正常」；-Fake plugindemand 演示不落盘",
+                       "frozen":  false,
+                       "frozenAt":  "",
+                       "frozenReason":  "",
+                       "loc":  "crystal.json plugins[].demand"
+                   },
+                   {
+                       "id":  "disk-low",
+                       "module":  "self",
+                       "symptom":  "C/F 盘剩余低于 10GB 或遗留目录过大（只报不动，人工清理）",
+                       "detect":  "Get-PSDrive C/F 剩余空间+遗留目录大小（dsh-crystal.bak-*/_crystal-sandbox）",
+                       "fix":  {
+                                   "kind":  "none",
+                                   "steps":  [
+                                                 "只诊断不修：列数字，由人工决定清理"
+                                             ]
+                               },
+                       "verify":  "doctor 输出 GREEN 带磁盘摘要；-Fake disk 演示黄行",
+                       "frozen":  false,
+                       "frozenAt":  "",
+                       "frozenReason":  "",
+                       "loc":  "磁盘"
+                   }
+               ]
+}

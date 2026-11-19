@@ -1,0 +1,60 @@
+{
+    "version":  1,
+    "priority":  "脑公原话 \u003e 总表规则 \u003e 插件默认",
+    "health":  {
+                   "checks":  [
+                                  "bom-truth",
+                                  "gui-port",
+                                  "snowluma-pipe",
+                                  "stamp-starvation",
+                                  "heartbeat",
+                                  "fallback"
+                              ],
+                   "guiPort":  57989,
+                   "onebotHttp":  3000,
+                   "onebotWs":  3001,
+                   "stampMaxAgeHours":  30,
+                   "heartbeatMinutes":  30,
+                   "cookiesWarn":  60,
+                   "cookiesError":  68,
+                   "paths":  {
+                                 "truth":  "data\\crystal\\truth.json",
+                                 "faults":  "data\\crystal\\fault-dictionary.json",
+                                 "alerts":  "data\\crystal\\alerts.log",
+                                 "errors":  "data\\crystal\\errors.log",
+                                 "stamps":  "data\\crystal\\stamps",
+                                 "snapshots":  "data\\crystal\\snapshots",
+                                 "heartbeat":  "data\\crystal\\heartbeat.txt",
+                                 "fallback":  "data\\fallback.json"
+                             },
+                   "guiPortNote":  "候选/上次已知：doctor 每次按判据（/api/__probe__ 401 纯文本）现判，不一致时 -Auto 写回"
+               },
+    "lastChecked":  null,
+    "activeConfig":  {
+                         "updatedAt":  "2026-11-19 23:52:12.737",
+                         "locks":  [
+                                       {
+                                           "path":  "F:\\crystal\\conf\\lock1-selfstop.json",
+                                           "loadedAt":  "2026-11-19 23:52:12.727",
+                                           "schema":  "1",
+                                           "source":  "conf",
+                                           "lock":  "lock1"
+                                       },
+                                       {
+                                           "path":  "F:\\crystal-kill\\conf\\lock2-kill.json",
+                                           "loadedAt":  "2026-11-19 23:52:12.728",
+                                           "schema":  "1",
+                                           "source":  "conf",
+                                           "lock":  "lock2"
+                                       },
+                                       {
+                                           "path":  "F:\\crystal-l0\\conf\\lock3-fallback.json",
+                                           "loadedAt":  "2026-11-19 23:52:12.728",
+                                           "schema":  "1",
+                                           "source":  "conf",
+                                           "lock":  "lock3"
+                                       }
+                                   ]
+                     },
+  "activeConfig": {"updatedAt":"2026-11-20 00:03:45.632","locks":[{"path":"F:\\crystal\\conf\\lock1-selfstop.json","loadedAt":"2026-11-20 00:03:45.621","schema":"1","source":"conf","lock":"lock1"},{"path":"F:\\crystal-kill\\conf\\lock2-kill.json","loadedAt":"2026-11-20 00:03:45.622","schema":"1","source":"conf","lock":"lock2"},{"path":"F:\\crystal-l0\\conf\\lock3-fallback.json","loadedAt":"2026-11-20 00:03:45.622","schema":"1","source":"conf","lock":"lock3"}]}
+}

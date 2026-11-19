@@ -1,0 +1,1 @@
+{"yellow":0,"red":1,"reason":"gui-port 修复前：表值 51769 实测 57989","green":1,"state":"red","time":"2026-11-19 23:52:15.604","gray":0}
