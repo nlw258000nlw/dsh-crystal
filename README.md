@@ -72,3 +72,7 @@
 - 运行数据：F:\crystal\data\（endpoints/queue/usage/usage.jsonl/fallbacks/fallback-state/render-baseline/heartbeat/versions/cost/daily-scan/logs/install）
 - 插件根 data\crystal\：doctor 运行文件（truth/fault-dictionary/alerts/errors/stamps/snapshots/evidence）
 - 三锁：F:\crystal\conf、F:\crystal-kill、F:\crystal-l0；演练 F:\crystal-drill；沙箱 F:\_crystal-sandbox
+
+---
+
+作者：QQ 2870864194（脑公）｜开源：MIT License
