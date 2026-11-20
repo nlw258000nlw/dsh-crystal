@@ -1,14 +1,20 @@
 ﻿# crystal-dues.ps1 - 今日欠债：只读汇总 dtodo 三轨（life/work/daily）的未完成与逾期件数
-# 数据源=记忆目录（缺省 C:\Users\丽微\.dsh\memories，可用 crystal.json paths.memories 覆盖）
+# 数据源=记忆目录（缺省 $env:USERPROFILE\.dsh\memories，可用 crystal.json paths.memories 覆盖）
 # 条目格式（dsh-memory-evolve lib\todo.js）：§ 分隔，首行 [时间] [id: x] [q1-4]? [due: YYYY-MM-DD]? [status: ...]
-# 输出 ≤5 行；源文件缺失=source:none 不算错；缓存 F:\crystal\data\dues.json
+# 输出 ≤5 行；源文件缺失=source:none 不算错；缓存 $cache
 param([switch]$Quiet)
 $ErrorActionPreference='SilentlyContinue'
 $mem=Join-Path $env:USERPROFILE '.dsh\.dsh\memories'
-$cache='F:\crystal\data\dues.json'
+$Plugin=(Get-Item (Join-Path $PSScriptRoot '..')).FullName
+$DataHome=Join-Path $env:LOCALAPPDATA 'crystal\data'
+$DetF=Join-Path $Plugin 'data\detected.json'
+if(Test-Path $DetF){
+  try{ $det=Get-Content $DetF -Raw -Encoding UTF8 | ConvertFrom-Json; if($det.dataRoot){ $DataHome=[string]$det.dataRoot } }catch{}
+}
+$cache=Join-Path $DataHome 'dues.json'
 $enc=New-Object Text.UTF8Encoding($false)
 try{
-  $t=Get-Content 'C:\Users\丽微\.dsh\plugins\dsh-crystal\crystal.json' -Raw -Encoding UTF8 | ConvertFrom-Json
+  $t=Get-Content (Join-Path $Plugin 'crystal.json') -Raw -Encoding UTF8 | ConvertFrom-Json
   if($null -ne $t.paths -and $null -ne $t.paths.memories -and $t.paths.memories -ne ''){ $mem=[string]$t.paths.memories }
 }catch{}
 $today=Get-Date -Format 'yyyy-MM-dd'

@@ -1,16 +1,26 @@
-﻿# crystal-pluginctl.ps1 - 插件按需调度开关（§24/脑公 m03412：用到自动开、不用自动关、全程留痕、不删插件）
+﻿# crystal-pluginctl.ps1 - 插件按需调度开关（§24/主人 m03412：用到自动开、不用自动关、全程留痕、不删插件）
 # 用法：crystal-pluginctl.ps1 [-Verb] enable|disable|temp|off|list [-Arg1 <插件名>] [-Arg2 <小时>] [-Test]
 # enable = 真改 profiles\desktop\package.json 的 dsh.profile.bundles（改前 .bak-20261119-<时刻> 点名）；disable = 从 bundles 移除
-# 台账 F:\crystal\data\plugin-toggles.json；留痕 F:\crystal\data\plugin-toggles.jsonl
+# 台账 $DataHome\plugin-toggles.json；留痕 $DataHome\plugin-toggles.jsonl
 # 安全边界：off 档不许自动开；always 档（常驻核心）不许关；不在总表纳管清单的名字拒绝操作；-Test 只打计划不写任何文件
 param([string]$Verb='list',[string]$Arg1='',[string]$Arg2='',[switch]$Test)
 $ErrorActionPreference='SilentlyContinue'
-$toggleFile='F:\crystal\data\plugin-toggles.json'
-$traceLog='F:\crystal\data\plugin-toggles.jsonl'
-$ProfilePkg='C:\Users\丽微\.dsh\profiles\desktop\package.json'
-$CrystalJson='C:\Users\丽微\.dsh\plugins\dsh-crystal\crystal.json'
+$Plugin=(Get-Item (Join-Path $PSScriptRoot '..')).FullName
+$DataHome=Join-Path $env:LOCALAPPDATA 'crystal\data'
+$DetF=Join-Path $Plugin 'data\detected.json'
+if(Test-Path $DetF){
+  try{
+    $det=Get-Content $DetF -Raw -Encoding UTF8 | ConvertFrom-Json
+    if($det.dataRoot){ $DataHome=[string]$det.dataRoot }
+    if($det.userHome){ $ProfilePkg=Join-Path ([string]$det.userHome) '.dsh\profiles\desktop\package.json' }
+  }catch{}
+}
+$toggleFile=Join-Path $DataHome 'plugin-toggles.json'
+$traceLog=Join-Path $DataHome 'plugin-toggles.jsonl'
+if(-not $ProfilePkg){ $ProfilePkg=Join-Path $env:USERPROFILE '.dsh\profiles\desktop\package.json' }
+$CrystalJson=Join-Path $Plugin 'crystal.json'
 $enc=New-Object Text.UTF8Encoding($false)
-$softOffFile='F:\crystal\data\soft-off.json'
+$softOffFile=Join-Path $DataHome 'soft-off.json'
 function Get-Bundles{
   try{
     $p=[IO.File]::ReadAllText($ProfilePkg,[Text.Encoding]::UTF8) | ConvertFrom-Json
@@ -52,7 +62,7 @@ switch($Verb.ToLower()){
     $mp=@(Get-ManagedPlugins | Where-Object { [string]$_.name -eq $Arg1 })
     if($mp.Count -eq 0){ Write-Output ('拒绝：'+$Arg1+' 不在总表纳管清单'); exit 1 }
     $demand=[string]($mp[0].demand)
-    if($demand -eq 'off'){ Write-Output ('拒绝：'+$Arg1+' 是 off 档，不许自动开（需脑公原话）'); exit 1 }
+    if($demand -eq 'off'){ Write-Output ('拒绝：'+$Arg1+' 是 off 档，不许自动开（需主人原话）'); exit 1 }
     $hours=72; if($Arg2){ try{ $hours=[int]$Arg2 }catch{} }
     $bundles=@(Get-Bundles)
     $already=($bundles -contains $Arg1)
@@ -70,14 +80,14 @@ switch($Verb.ToLower()){
     $entries+=@{ name=$Arg1; since=(Get-Date -Format 'yyyy-MM-dd HH:mm:ss'); deadline=$deadline; status='on'; demand=$demand }
     [IO.File]::WriteAllText($toggleFile, (@{ updatedAt=(Get-Date -Format 'yyyy-MM-dd HH:mm:ss'); entries=$entries } | ConvertTo-Json -Depth 4), $enc)
     Trace 'enable' $Arg1 (' lease='+$hours+'h deadline='+$deadline)
-    Write-Output ('生效待 DSH 重载（重启前先跟脑公说）；到期 doctor 会喊 [PLUGIN-AUTO-OFF-DUE]')
+    Write-Output ('生效待 DSH 重载（重启前先跟主人说）；到期 doctor 会喊 [PLUGIN-AUTO-OFF-DUE]')
     exit 0
   }
   'disable' {
     if(-not $Arg1){ Write-Output '用法: pluginctl disable <插件名> [-Test]'; exit 0 }
     $mp=@(Get-ManagedPlugins | Where-Object { [string]$_.name -eq $Arg1 })
     if($mp.Count -eq 0){ Write-Output ('拒绝：'+$Arg1+' 不在总表纳管清单'); exit 1 }
-    if([string]($mp[0].demand) -eq 'always'){ Write-Output ('拒绝：'+$Arg1+' 是 always 常驻核心，不许关（需脑公原话）'); exit 1 }
+    if([string]($mp[0].demand) -eq 'always'){ Write-Output ('拒绝：'+$Arg1+' 是 always 常驻核心，不许关（需主人原话）'); exit 1 }
     $bundles=@(Get-Bundles)
     $already=($bundles -contains $Arg1)
     if($Test){
@@ -91,7 +101,7 @@ switch($Verb.ToLower()){
     $entries+=@{ name=$Arg1; since=(Get-Date -Format 'yyyy-MM-dd HH:mm:ss'); deadline=''; status='off'; demand=[string]($mp[0].demand) }
     [IO.File]::WriteAllText($toggleFile, (@{ updatedAt=(Get-Date -Format 'yyyy-MM-dd HH:mm:ss'); entries=$entries } | ConvertTo-Json -Depth 4), $enc)
     Trace 'disable' $Arg1 ''
-    Write-Output ('生效待 DSH 重载（重启前先跟脑公说）')
+    Write-Output ('生效待 DSH 重载（重启前先跟主人说）')
     exit 0
   }
   'temp' {

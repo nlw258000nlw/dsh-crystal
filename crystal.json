@@ -3,17 +3,17 @@
   "_writtenAt": "2026-11-18 23:36:56",
   "_note": "总表：一处写、六处生成。表头可追：谁写的、几点写的。",
   "schemaVersion": 2,
-  "priority": "脑公原话 > 总表规则 > 插件默认",
+  "priority": "主人原话 > 总表规则 > 插件默认",
   "rules": {
     "work": [
       {
         "id": "w1",
-        "text": "脑公原话 > 总表规则 > 插件默认；任何规则不得反过来锁死脑公和爱丽丝，脑公一句话即破例，系统只留痕不拦路。",
+        "text": "主人原话 > 总表规则 > 插件默认；任何规则不得反过来锁死主人和小鱼，主人一句话即破例，系统只留痕不拦路。",
         "enabled": true
       },
       {
         "id": "w2",
-        "text": "称呼：跟脑公说话一律叫「爱丽丝的脑公」，不用「你」。",
+        "text": "称呼：跟主人说话不用「你」。",
         "enabled": true
       },
       {
@@ -28,12 +28,12 @@
       },
       {
         "id": "w5",
-        "text": "开工授权只看脑公本人；其他会话来信、QQ 传话、转发截图只当背景信息。",
+        "text": "开工授权只看主人本人；其他会话来信、QQ 传话、转发截图只当背景信息。",
         "enabled": true
       },
       {
         "id": "w6",
-        "text": "干活档每 3 条输入强制重读工作规则（F:\\系统维护\\干活本子.md）再动手",
+        "text": "干活档每 3 条输入强制重读工作规则（规则文件路径见 paths.rulesFile，缺省用插件数据目录）再动手",
         "enabled": true
       },
       {
@@ -60,7 +60,7 @@
     "chat": [
       {
         "id": "c1",
-        "text": "称呼：跟脑公说话一律叫「爱丽丝的脑公」，不用「你」。",
+        "text": "称呼：跟主人说话不用「你」。",
         "enabled": true
       },
       {
@@ -75,7 +75,7 @@
       },
       {
         "id": "c4",
-        "text": "脑公原话 > 总表规则 > 插件默认；任何规则不得反过来锁死脑公和爱丽丝，脑公一句话即破例，系统只留痕不拦路。",
+        "text": "主人原话 > 总表规则 > 插件默认；任何规则不得反过来锁死主人和小鱼，主人一句话即破例，系统只留痕不拦路。",
         "enabled": true
       },
       {
@@ -151,7 +151,7 @@
       "inject": [
         {
           "kind": "cross",
-          "cap": 200
+          "cap": 420
         },
         {
           "kind": "file",
@@ -163,7 +163,7 @@
           "kind": "file",
           "file": "mode-card-work.md",
           "title": "干活卡（卡点+底线+干活四条+坑+家里的事）",
-          "cap": 900
+          "cap": 1800
         }
       ],
       "tools": {
@@ -225,78 +225,65 @@
       "name": "dsh-crystal",
       "kind": "working",
       "enabled": true,
-      "note": "本插件（P1 骨架期）",
-      "demand": "always"
+      "note": "本插件（P1 骨架期）"
     },
     {
       "name": "dsh-imagegen",
       "kind": "speaking",
       "enabled": true,
-      "note": "团团TV 生图",
-      "demand": "on-demand"
+      "note": "团团TV 生图"
     },
     {
       "name": "memory-evolve",
       "kind": "working",
       "enabled": true,
-      "note": "记忆/待办/技能",
-      "demand": "always"
+      "note": "记忆/待办/技能"
     },
     {
       "name": "qq-agent-presets",
       "kind": "working",
       "enabled": true,
-      "note": "桥 preset 补丁（现网红线之一，只读）",
-      "demand": "always"
+      "note": "桥 preset 补丁（现网红线之一，只读）"
     },
     {
       "name": "dsh-session-manager",
-      "note": "插件目录+package.json 0.7.5，2026-11-19 纳管",
-      "demand": "on-demand"
+      "note": "插件目录+package.json 0.7.5，2026-11-19 纳管"
     },
     {
       "name": "dsh-sieve-web",
-      "note": "插件目录+package.json 0.4.1，2026-11-19 纳管",
-      "demand": "on-demand"
+      "note": "插件目录+package.json 0.4.1，2026-11-19 纳管"
     },
     {
       "name": "dsh-sieve",
-      "note": "插件目录+package.json 0.4.1，2026-11-19 纳管",
-      "demand": "on-demand"
+      "note": "插件目录+package.json 0.4.1，2026-11-19 纳管"
     },
     {
       "name": "qq-agent-context",
-      "note": "插件目录+package.json @local/qq-agent-context 1.0.0，2026-11-19 纳管",
-      "demand": "on-demand"
+      "note": "插件目录+package.json @local/qq-agent-context 1.0.0，2026-11-19 纳管"
     },
     {
       "name": "body-of-fish-bridge",
-      "note": "插件目录+package.json 0.1.0，2026-11-19 纳管",
-      "demand": "on-demand"
+      "note": "插件目录+package.json 0.1.0，2026-11-19 纳管"
     },
     {
       "name": "modlens",
-      "note": "插件目录+package.json @liustack/modlens 3.27.2，2026-11-19 纳管",
-      "demand": "on-demand"
+      "note": "插件目录+package.json @liustack/modlens 3.27.2，2026-11-19 纳管"
     },
     {
       "name": "dsh-api-probe",
-      "note": "插件目录+package.json 0.0.1，2026-11-19 纳管",
-      "demand": "on-demand"
+      "note": "插件目录+package.json 0.0.1，2026-11-19 纳管"
     },
     {
       "name": "dsh-video-storyboard",
-      "note": "插件目录+package.json 0.6.6，2026-11-19 纳管",
-      "demand": "on-demand"
+      "note": "插件目录+package.json 0.6.6，2026-11-19 纳管"
     },
     {
       "name": "dsh-auto-wake",
-      "note": "插件目录+package.json 0.1.0，2026-11-19 纳管",
-      "demand": "on-demand"
+      "note": "插件目录+package.json 0.1.0，2026-11-19 纳管"
     }
   ],
   "deps": {
-    "ffmpeg": "C:\\Users\\丽微\\.dsh\\.dsh\\tools\\ffmpeg\\bin\\ffmpeg.exe"
+    "ffmpeg": ""
   },
   "channels": {
     "_note": "只存引用不存明文；现网渠道待首拍",
@@ -305,7 +292,7 @@
   "memory": {
     "compactAfter": 20,
     "summaryLines": 5,
-    "externalEntry": "F:\\系统维护\\crystal-mem.ps1",
+    "externalEntry": "",
     "externalEntryState": "待建"
   },
   "budget": {
@@ -348,7 +335,7 @@
     ],
     "offPeakRatio": 0.5,
     "updatedAt": "2026-11-18 21:16:00",
-    "note": "CR-008 A：可延后重活排到平价；脑公喊「现在做」立即插队；每笔支出按当时时段记 priceTier"
+    "note": "CR-008 A：可延后重活排到平价；主人喊「现在做」立即插队；每笔支出按当时时段记 priceTier"
   },
   "confVersions": {
     "require": [
@@ -358,9 +345,9 @@
     ],
     "status": "live",
     "locks": {
-      "lock1": "F:\\crystal\\conf\\lock1-selfstop.json",
-      "lock2": "F:\\crystal-kill\\conf\\lock2-kill.json",
-      "lock3": "F:\\crystal-l0\\conf\\lock3-fallback.json"
+      "lock1": "",
+      "lock2": "",
+      "lock3": ""
     },
     "note": "CR-008 B：版本不符拒启 + [CONF-LOAD] 留痕；本段只排活、不动三锁 conf",
     "updatedAt": "2026-11-18 21:43:00",
@@ -369,44 +356,44 @@
   "renders": [
     {
       "id": "r1",
-      "target": "F:\\qq-dsh-bridge\\qq-bridge\\state\\inject-table.json",
+      "target": "",
       "kind": "inject-table",
       "status": "planned-redline"
     },
     {
       "id": "r2",
-      "target": "F:\\qq-dsh-bridge\\qq-bridge\\plugins\\qq-agent-presets\\qq-tool-restrict.mjs",
+      "target": "",
       "kind": "tool-whitelist",
       "status": "planned-redline"
     },
     {
       "id": "r3",
-      "target": "F:\\qq-dsh-bridge\\qq-bridge\\src\\bridge.js",
+      "target": "",
       "kind": "mode-trigger",
       "status": "planned-redline"
     },
     {
       "id": "r4",
-      "target": "F:\\qq-dsh-bridge\\qq-bridge\\plugins\\qq-agent-presets\\presets\\*.patch.yml",
+      "target": "",
       "kind": "preset-patch",
       "status": "planned-redline"
     },
     {
       "id": "r5",
-      "target": "C:\\Users\\丽微\\.dsh\\AGENTS.md",
+      "target": "",
       "kind": "agenda-procedures",
       "status": "planned-redline"
     },
     {
       "id": "r6",
-      "target": "F:\\qq-dsh-bridge\\qq-bridge\\config.json",
+      "target": "",
       "kind": "bridge-config",
       "status": "planned-redline"
     }
   ],
   "automation": [
     {
-      "id": "DSH-重启并接桥",
+      "id": "DSH-Restart",
       "trigger": "schtasks",
       "killable": false
     },
@@ -442,7 +429,7 @@
       "killable": false
     },
     {
-      "id": "爱丽丝自检.cmd",
+      "id": "小鱼自检.cmd",
       "trigger": "startup",
       "killable": false
     },
@@ -450,89 +437,89 @@
       "id": "桥接保活.ps1",
       "trigger": "file",
       "killable": false,
-      "path": "F:\\系统维护\\桥接保活.ps1"
+      "path": ""
     },
     {
-      "id": "接回爱丽丝",
+      "id": "接回小鱼",
       "trigger": "file",
-      "path": "F:\\系统维护\\snowluma-reinject.ps1",
+      "path": "",
       "killable": false,
       "note": "开机清单只读探活，不启停"
     }
   ],
   "conflicts": [
     "只读别人：不 kill/stop/改 SnowLuma-Guard、桥接保活等别人脚本",
-    "单一写者：先拿 Global\\crystal-lock 再拿 F:\\crystal\\data\\lock，拿不到排队",
+    "单一写者：先拿 Global\\crystal-lock 再拿 插件数据目录\\lock，拿不到排队",
     "先探测后动手：进程/任务状态/锁文件/端口四查；被占排队 90 秒，仍占则跳过写 fallbacks.log",
-    "重启 DSH 只走一条通道：F:\\系统维护\\重启并接桥.ps1",
+    "重启 DSH 只走一条通道：插件自带重启脚本",
     "计划任务幂等：先查同名再建",
     "不抢占端口：3100/3000/3001/GUI 端口只读探测"
   ],
   "verify": [],
   "paths": {
-    "queue": "F:\\crystal\\data\\queue.json",
-    "fallbacks": "F:\\crystal\\data\\fallbacks.log",
-    "logs": "F:\\crystal\\data\\logs",
-    "alerts": "C:\\Users\\丽微\\.dsh\\plugins\\dsh-crystal\\data\\crystal\\alerts.log",
-    "heartbeat": "F:\\crystal\\data\\heartbeat.json",
-    "pluginHome": "C:\\Users\\丽微\\.dsh\\plugins\\dsh-crystal",
-    "stamps": "F:\\crystal\\dsh-crystal\\data\\crystal\\stamps",
-    "usage": "F:\\crystal\\data\\usage.jsonl",
-    "cost": "F:\\crystal\\data\\cost.jsonl",
-    "memories": "C:\\Users\\丽微\\.dsh\\.dsh\\memories",
-    "intercepts": "F:\\crystal\\data\\intercepts.jsonl",
-    "startupDir": "C:\\Users\\丽微\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs\\Startup",
-    "bridgeHome": "F:\\qq-dsh-bridge\\qq-bridge",
-    "profileHome": "C:\\Users\\丽微\\.dsh\\profiles\\desktop",
-    "sessionsHome": "C:\\Users\\丽微\\.dsh\\sessions",
-    "consoleToken": "F:\\qq-dsh-bridge\\qq-bridge\\state\\console-token",
-    "bootProbe": "F:\\crystal\\data\\boot-probe.log",
-    "sysHome": "F:\\系统维护",
-    "pluginsHome": "C:\\Users\\丽微\\.dsh\\plugins",
-    "bakRoot": "F:\\备份",
-    "workHome": "C:\\Users\\丽微\\Documents\\deepseek-harness",
-    "sandbox": "F:\\_crystal-sandbox",
-    "pushState": "F:\\crystal\\data\\alert-push-state.json",
-    "crystalHome": "F:\\crystal",
-    "toggles": "F:\\crystal\\data\\plugin-toggles.json",
-    "dataHome": "F:\\crystal\\data"
+    "queue": "",
+    "fallbacks": "",
+    "logs": "",
+    "alerts": "",
+    "heartbeat": "",
+    "pluginHome": "",
+    "stamps": "",
+    "usage": "",
+    "cost": "",
+    "memories": "",
+    "intercepts": "",
+    "startupDir": "",
+    "bridgeHome": "",
+    "profileHome": "",
+    "sessionsHome": "",
+    "consoleToken": "",
+    "bootProbe": "",
+    "sysHome": "",
+    "pluginsHome": "",
+    "bakRoot": "",
+    "workHome": "",
+    "sandbox": "",
+    "pushState": "",
+    "crystalHome": "",
+    "toggles": "",
+    "dataHome": ""
   },
   "checks": {
     "mounts": {
-      "junction": "C:\\Users\\丽微\\.dsh\\plugins\\dsh-crystal",
-      "profilePkg": "C:\\Users\\丽微\\.dsh\\profiles\\desktop\\package.json",
+      "junction": "",
+      "profilePkg": "",
       "bundleKey": "dsh-crystal",
-      "agendaMd": "C:\\Users\\丽微\\.dsh\\AGENTS.md"
+      "agendaMd": ""
     },
     "cookies": {
-      "copyDir": "F:\\_crystal-sandbox\\cookies",
+      "copyDir": "",
       "warnCount": 60,
       "errorCount": 68
     },
     "version": {
       "hostSource": "registry HKLM Uninstall DisplayVersion",
-      "profilePkg": "C:\\Users\\丽微\\.dsh\\profiles\\desktop\\package.json"
+      "profilePkg": ""
     },
     "heartbeat": {
       "staleMinutes": 30
     },
     "budget": {
-      "warnTokensDaily": 500000000,
+      "warnTokensDaily": 1000000,
       "warnCnyDaily": 12
     }
   },
   "forbidden": [
-    "taskkill 带 /T /F（含 taskkill /IM … /T /F 组合写法，杀进程只许 Stop-Process -Id 或走 F:\\系统维护\\重启并接桥.ps1）",
-    "重启 DSH 只走一条通道：F:\\系统维护\\重启并接桥.ps1（或 Stop-Process -Id 逐个）"
+    "taskkill 带 /T /F（含 taskkill /IM … /T /F 组合写法，杀进程只许 Stop-Process -Id 或走 插件自带重启脚本）",
+    "重启 DSH 只走一条通道：插件自带重启脚本（或 Stop-Process -Id 逐个）"
   ],
   "cost": {
-    "path": "F:\\crystal\\data\\cost.jsonl",
+    "path": "",
     "note": "只记真实用量：数据源=桥接/DSH 真落盘的真实 usage（输入/输出/缓存读），未获授权前无写入端，只建 schema 空表；禁止编数/样例行",
     "fields": "ts|source|tier|inputTokens|outputTokens|cacheReadTokens|amountCny",
     "amountCny": "由写入端按各模型真实单价折算，crystal.ps1 count 只汇总不改账"
   },
   "procedures": [
-    "§16.4 令牌失效旁路口径：群发令牌失效时，一律先走控制台旁路（POST http://127.0.0.1:3100/api/send/group + x-console-token），成功就记一行 fallbacks.log，重试不超过一次；自动降级待脑公授权桥改动批次",
+    "§16.4 令牌失效旁路口径：群发令牌失效时，一律先走控制台旁路（POST http://127.0.0.1:3100/api/send/group + x-console-token），成功就记一行 fallbacks.log，重试不超过一次；自动降级待主人授权桥改动批次",
     "§16.5 SnowLuma 掉线人工口径：QQ 在线但 3000/3001 不通=管道没注入，停 SnowLuma-Guard→杀重复实例→单实例重启→WebUI 5099「进程注入→加载→刷新」，恢复后写一行留痕"
   ],
   "autonomy": {
@@ -559,130 +546,16 @@
       "reason": "*.bak-* 备份目录（2026-11-17 备份），不纳管"
     }
   ],
-  "plugin-capability": [
-    {
-      "demand": "always",
-      "plugin": "qq-agent-presets",
-      "tasks": [
-        "干活/聊天模式",
-        "档位切换",
-        "工具可用范围"
-      ],
-      "skills": [
-        "模式切换",
-        "工具白名单",
-        "预设补丁"
-      ],
-      "how": "常驻，无需开启"
-    },
-    {
-      "demand": "always",
-      "plugin": "dsh-memory-evolve",
-      "tasks": [
-        "记住事情",
-        "查待办",
-        "调技能"
-      ],
-      "skills": [
-        "长期记忆",
-        "待办",
-        "技能库"
-      ],
-      "how": "常驻，无需开启"
-    },
-    {
-      "demand": "on-demand",
-      "plugin": "dsh-imagegen",
-      "tasks": [
-        "画图",
-        "改图",
-        "生成视频",
-        "找模板"
-      ],
-      "skills": [
-        "文生图",
-        "图生图",
-        "视频生成",
-        "画廊",
-        "提示词模板"
-      ],
-      "how": "pluginctl enable dsh-imagegen"
-    },
-    {
-      "demand": "on-demand",
-      "plugin": "dsh-bili-watch",
-      "tasks": [
-        "看视频讲了什么",
-        "分析弹幕",
-        "要字幕"
-      ],
-      "skills": [
-        "B站视频解析",
-        "弹幕热区",
-        "字幕提取"
-      ],
-      "how": "pluginctl enable dsh-bili-watch"
-    },
-    {
-      "demand": "on-demand",
-      "plugin": "dsh-feiyu-voice",
-      "tasks": [
-        "说句话",
-        "发语音"
-      ],
-      "skills": [
-        "语音合成",
-        "QQ 语音条"
-      ],
-      "how": "pluginctl enable dsh-feiyu-voice"
-    },
-    {
-      "demand": "on-demand",
-      "plugin": "dsh-better-ears",
-      "tasks": [
-        "听音频",
-        "转写录音"
-      ],
-      "skills": [
-        "本地听音",
-        "语音转文字"
-      ],
-      "how": "pluginctl enable dsh-better-ears"
-    },
-    {
-      "demand": "on-demand",
-      "plugin": "dsh-cordis-inspect",
-      "tasks": [
-        "查插件接口",
-        "写插件"
-      ],
-      "skills": [
-        "插件开发探查",
-        "Cordis API 查询"
-      ],
-      "how": "pluginctl enable dsh-cordis-inspect"
-    }
-  ],
   "pet": {
-    "image": "assets\\pet\\blue-fish.jpg",
-    "enabled": true,
+    "image": "assets\\pet\\whale-girl.png",
+    "enabled": false,
     "silentTo": "08:00",
     "greetingAm": true,
     "intervalMin": 15,
     "voice": true,
     "silentFrom": "23:00",
-    "size": 260,
+    "size": 200,
     "greetingPm": true,
     "bubbleChars": 44
-  },
-  "modePlugins": {
-    "work": [
-      "dsh-memory-evolve",
-      "dsh-cordis-inspect"
-    ],
-    "chat": [
-      "dsh-feiyu-voice",
-      "dsh-imagegen"
-    ]
   }
 }

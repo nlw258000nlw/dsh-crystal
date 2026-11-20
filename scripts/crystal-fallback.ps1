@@ -1,15 +1,20 @@
 ﻿# crystal-fallback.ps1 - 兜底留痕共用库：写 fallbacks.log + 同处连退计数（≥3 黄、≥10 红），禁止静默兜底（§10.4）
 # 用法：. '路径\crystal-fallback.ps1' 后调用 Write-CrystalFallback -Module '<模块>' -Reason '<原因>' -FallbackTo '<退到哪>'
-# 返回 PSCustomObject{ count, level }；level=ok|yellow|red；计数状态落 F:\crystal\data\fallback-state.json
+# 返回 PSCustomObject{ count, level }；level=ok|yellow|red；计数状态落 $statePath（默认数据目录 fallback-state.json）
 function Write-CrystalFallback{
   param([string]$Module='unknown',[string]$Reason='',[string]$FallbackTo='')
   $cfgPath=Join-Path $PSScriptRoot '..\crystal.json'
-  $log='F:\crystal\data\fallbacks.log'
+  $DataHome=Join-Path $env:LOCALAPPDATA 'crystal\data'
+  try{
+    $fbDet=Get-Content (Join-Path $PSScriptRoot '..\data\detected.json') -Raw -Encoding UTF8 | ConvertFrom-Json
+    if($fbDet.dataRoot){ $DataHome=[string]$fbDet.dataRoot }
+  }catch{}
+  $log=Join-Path $DataHome 'fallbacks.log'
   try{
     $cj=Get-Content $cfgPath -Raw -Encoding UTF8 | ConvertFrom-Json
     if($null -ne $cj.paths -and $null -ne $cj.paths.fallbacks -and $cj.paths.fallbacks -ne ''){ $log=[string]$cj.paths.fallbacks }
   }catch{}
-  $statePath='F:\crystal\data\fallback-state.json'
+  $statePath=Join-Path $DataHome 'fallback-state.json'
   $enc=New-Object Text.UTF8Encoding($false)
   $now=Get-Date -Format 'yyyy-MM-dd HH:mm:ss.fff'
   $st=@{}

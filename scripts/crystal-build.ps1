@@ -6,7 +6,7 @@
   [switch]$FixPresets,
   [switch]$Apply,
   [string]$SourceDir = '',
-  [string]$OutDir = "F:\_crystal-sandbox\rendered"
+  [string]$OutDir = ""
 )
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'crystal-lock.ps1')
@@ -15,6 +15,12 @@ $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
 $table = Join-Path $root 'crystal.json'
 $logDir = Join-Path $root 'data\crystal\logs'
+$bDetF = Join-Path $root 'data\detected.json'
+$bData = Join-Path $env:LOCALAPPDATA 'crystal\data'
+if (Test-Path $bDetF) {
+  try { $bdet = Get-Content $bDetF -Raw -Encoding UTF8 | ConvertFrom-Json; if ($bdet.dataRoot) { $bData = [string]$bdet.dataRoot } } catch {}
+}
+if ($OutDir -eq '') { $OutDir = Join-Path $env:LOCALAPPDATA '_crystal-sandbox\rendered' }
 if (-not (Test-Path $logDir)) { New-Item -ItemType Directory -Force -Path $logDir | Out-Null }
 $t = Get-Content -Raw -Encoding UTF8 $table | ConvertFrom-Json
 if ($t.schemaVersion -ne 2) { throw 'crystal.json schemaVersion 必须为 2' }
@@ -53,8 +59,8 @@ if ($CheckPatches) {
   . (Join-Path $PSScriptRoot 'crystal-fallback.ps1')
   $alertsP = Get-CrystalAlertsPath
   try{ if($null -ne $t.paths.alerts -and $t.paths.alerts -ne ''){ $alertsP=[string]$t.paths.alerts } }catch{}
-  $sandboxHome='F:\_crystal-sandbox'
-  $baselinePath='F:\crystal\data\render-baseline.json'
+  $sandboxHome=Join-Path $env:LOCALAPPDATA '_crystal-sandbox'
+  $baselinePath=Join-Path $bData 'render-baseline.json'
   try{
     if($null -ne $t.paths.sandbox -and $t.paths.sandbox -ne ''){ $sandboxHome=[string]$t.paths.sandbox }
     if($null -ne $t.paths.baseline -and $t.paths.baseline -ne ''){ $baselinePath=[string]$t.paths.baseline }
@@ -120,7 +126,7 @@ if ($CheckPatches) {
   exit 0
 }
 if ($FixPresets) {
-  # §16.7 自动重建 presets 生成段（脑公全权授权 m-mwmdh3vm-13a11f）：Stage1 只出沙箱 diff；-Apply 才写现网（先逐件 .bak 点名）
+  # §16.7 自动重建 presets 生成段（主人全权授权 m-mwmdh3vm-13a11f）：Stage1 只出沙箱 diff；-Apply 才写现网（先逐件 .bak 点名）
   $r4 = $t.renders | Where-Object { $_.id -eq 'r4' } | Select-Object -First 1
   $liveFiles = @(Get-ChildItem -Path $r4.target -File -ErrorAction SilentlyContinue)
   if ($liveFiles.Count -eq 0) { Write-Output '[FIXPRESETS] 通配无匹配，停手'; exit 2 }

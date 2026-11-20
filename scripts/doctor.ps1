@@ -5,7 +5,29 @@
 param([string]$Fake='', [switch]$Auto, [switch]$Quiet, [switch]$PushQQ, [string]$PricingNow='')
 $ErrorActionPreference='Stop'
 
-$Base='C:\Users\丽微\.dsh\plugins\dsh-crystal'
+$Base=(Get-Item (Join-Path $PSScriptRoot '..')).FullName
+# [fix-20261120-P7] 去本机化：缺省路径一律先读 data\detected.json（detect.ps1 产出），再回落本机习惯
+$DetObj=$null
+try{ $DetFile=Join-Path $Base 'data\detected.json'; if(Test-Path $DetFile){ $DetObj=Get-Content $DetFile -Raw -Encoding UTF8 | ConvertFrom-Json } }catch{}
+$DetHome=Join-Path $env:LOCALAPPDATA 'crystal'
+$DetKill=Join-Path $DetHome 'kill'
+$DetL0=Join-Path $DetHome 'l0'
+$DetBridge=''
+$DetMaint=''
+$DetUser=$env:USERPROFILE
+$DetBackup=Join-Path $DetHome 'backup'
+# 习惯路径兜底：探测常见安装位（跨机通用）
+foreach($cand in @('F','D','C','E')){ $p=$cand+':\qq-dsh-bridge\qq-bridge'; if(Test-Path (Join-Path $p 'src\bridge.js')){ $DetBridge=$p; break } }
+foreach($cand in @('F','D','C','E')){ $p=$cand+':\系统维护'; if(Test-Path $p){ $DetMaint=$p; break } }
+if($DetObj){
+  if($DetObj.crystalHome){ $DetHome=[string]$DetObj.crystalHome }
+  if($DetObj.killRoot){ $DetKill=[string]$DetObj.killRoot }
+  if($DetObj.l0Root){ $DetL0=[string]$DetObj.l0Root }
+  if($DetObj.bridgeHome){ $DetBridge=[string]$DetObj.bridgeHome }
+  if($DetObj.maintHome){ $DetMaint=[string]$DetObj.maintHome }
+  if($DetObj.userHome){ $DetUser=[string]$DetObj.userHome }
+  if($DetObj.backupRoot){ $DetBackup=[string]$DetObj.backupRoot }
+}
 $Data=Join-Path $Base 'data\crystal'
 $Truth=Join-Path $Data 'truth.json'
 $Faults=Join-Path $Data 'fault-dictionary.json'
@@ -14,10 +36,10 @@ $Errors=Join-Path $Data 'errors.log'
 $Stamps=Join-Path $Data 'stamps'
 try{ $cjSp=Get-Content (Join-Path $Base 'crystal.json') -Raw -Encoding UTF8 | ConvertFrom-Json; if($null -ne $cjSp.paths -and $null -ne $cjSp.paths.stamps -and $cjSp.paths.stamps -ne ''){ $Stamps=[string]$cjSp.paths.stamps } }catch{}
 $Snap=Join-Path $Data 'snapshots'
-$Heart='F:\crystal\data\heartbeat.json'
+$Heart=Join-Path $DetHome 'data\heartbeat.json'
 try{ $cjhb=Get-Content (Join-Path $Base 'crystal.json') -Raw -Encoding UTF8 | ConvertFrom-Json; if($null -ne $cjhb.paths -and $null -ne $cjhb.paths.heartbeat -and $cjhb.paths.heartbeat -ne ''){ $Heart=[string]$cjhb.paths.heartbeat } }catch{}
 $Fallback=Join-Path $Base 'data\fallback.json'
-$Intercepts='F:\crystal\data\intercepts.jsonl'
+$Intercepts=Join-Path $DetHome 'data\intercepts.jsonl'
 try{ $cjIc=Get-Content (Join-Path $Base 'crystal.json') -Raw -Encoding UTF8 | ConvertFrom-Json; if($null -ne $cjIc.paths.intercepts -and $cjIc.paths.intercepts -ne ''){ $Intercepts=[string]$cjIc.paths.intercepts } }catch{}
 function Add-ErrorLine([string]$text){
   try{
@@ -31,8 +53,8 @@ function Add-ErrorLine([string]$text){
 }
 # —— CR-008 A 平价/高峰排期（P1）——
 $PricingLib=Join-Path $Base 'scripts\crystal-pricing.ps1'
-$QueueFile='F:\crystal\data\queue.json'
-$UsageFile='F:\crystal\data\usage.log'
+$QueueFile=Join-Path $DetHome 'data\queue.json'
+$UsageFile=Join-Path $DetHome 'data\usage.log'
 if(Test-Path $PricingLib){ try{ . $PricingLib }catch{} }
 $FallbackLib=Join-Path $Base 'scripts\crystal-fallback.ps1'
 if(Test-Path $FallbackLib){
@@ -49,7 +71,7 @@ $script:lines=@()
 $script:redCount=0; $script:yellowCount=0; $script:greenCount=0; $script:grayCount=0
 $script:faultLevels=@{}
 
-$KillFile='F:\crystal-kill\kill'
+$KillFile=Join-Path $DetKill 'kill'
 $KillBlock=Join-Path $Data 'kill-blocked'
 $Runs=Join-Path $Data 'fault-runs.json'
 $StartT=Get-Date
@@ -58,7 +80,7 @@ $script:lastRedAt=$null
 if(Test-Path $DocState){ try{ $oldDoc=Get-Content $DocState -Raw | ConvertFrom-Json; if($null -ne $oldDoc -and $null -ne $oldDoc.lastRedAt -and $oldDoc.lastRedAt -ne ''){ $script:lastRedAt=[string]$oldDoc.lastRedAt } }catch{} }
 $script:lastRedDisplay=if($null -eq $script:lastRedAt){'从未'}else{$script:lastRedAt}
 $Cfg1=@{ timeoutSec=120; maxSameFault=3 }
-$Cfg1Path='F:\crystal\conf\lock1-selfstop.json'
+$Cfg1Path=Join-Path $DetHome 'conf\lock1-selfstop.json'
 try{
   $raw=[IO.File]::ReadAllBytes($Cfg1Path)
   if($raw.Length -ge 3 -and $raw[0]-eq 0xEF -and $raw[1]-eq 0xBB -and $raw[2]-eq 0xBF){ throw 'lock1 配置带 BOM' }
@@ -84,21 +106,25 @@ try{
 }
 
 # 总表派生路径（P12② 配置化：数据/外设路径一律从 crystal.json paths 读，缺键回落本机默认）
-$CrystalHome='F:\crystal'
-$DataHome='F:\crystal\data'
-$TogglesFile='F:\crystal\data\plugin-toggles.json'
-$PushState='F:\crystal\data\alert-push-state.json'
-$ConsoleTok='F:\qq-dsh-bridge\qq-bridge\state\console-token'
-$ProfilePkg='C:\Users\丽微\.dsh\profiles\desktop\package.json'
-$SandboxHome='F:\_crystal-sandbox'
-$SysHome='F:\系统维护'
-$BaselineF='F:\crystal\data\render-baseline.json'
-$UsageF='F:\crystal\data\usage.jsonl'
-$CostF='F:\crystal\data\cost.jsonl'
-$BStateF='F:\crystal\data\budget-push-state.json'
-$RcMirror='F:\crystal\data\read-receipts.json'
-$RcLog='F:\crystal\data\read-receipts.jsonl'
-$RestartGate='F:\系统维护\重启并接桥.ps1'
+$CrystalHome=$DetHome
+$DataHome=Join-Path $DetHome 'data'
+$KillRoot=$DetKill
+$L0Root=$DetL0
+$BridgeHome=$DetBridge
+$TogglesFile=Join-Path $DataHome 'plugin-toggles.json'
+$PushState=Join-Path $DataHome 'alert-push-state.json'
+$ConsoleTok=Join-Path $DetBridge 'state\console-token'
+$ProfilePkg=Join-Path $DetUser '.dsh\profiles\desktop\package.json'
+$SandboxHome=Join-Path $env:LOCALAPPDATA '_crystal-sandbox'
+foreach($cand in @('F','D','C')){ $p=$cand+':\_crystal-sandbox'; if(Test-Path $p){ $SandboxHome=$p; break } }
+$SysHome=$DetMaint
+$BaselineF=Join-Path $DataHome 'render-baseline.json'
+$UsageF=Join-Path $DataHome 'usage.jsonl'
+$CostF=Join-Path $DataHome 'cost.jsonl'
+$BStateF=Join-Path $DataHome 'budget-push-state.json'
+$RcMirror=Join-Path $DataHome 'read-receipts.json'
+$RcLog=Join-Path $DataHome 'read-receipts.jsonl'
+$RestartGate=Join-Path $DetMaint '重启并接桥.ps1'
 try{
   $cjP=Get-Content (Join-Path $Base 'crystal.json') -Raw -Encoding UTF8 | ConvertFrom-Json
   if($cjP.paths.crystalHome){ $CrystalHome=[string]$cjP.paths.crystalHome }
@@ -109,6 +135,8 @@ try{
   if($cjP.paths.profileHome){ $ProfilePkg=Join-Path ([string]$cjP.paths.profileHome) 'package.json' }
   if($cjP.paths.sandbox){ $SandboxHome=[string]$cjP.paths.sandbox }
   if($cjP.paths.sysHome){ $SysHome=[string]$cjP.paths.sysHome; $RestartGate=Join-Path $SysHome '重启并接桥.ps1' }
+  if($cjP.paths.killRoot){ $KillRoot=[string]$cjP.paths.killRoot; $KillFile=Join-Path $KillRoot 'kill' }
+  if($cjP.paths.l0Root){ $L0Root=[string]$cjP.paths.l0Root }
   if($cjP.paths.baseline){ $BaselineF=[string]$cjP.paths.baseline } elseif($DataHome){ $BaselineF=Join-Path $DataHome 'render-baseline.json' }
   if($cjP.paths.usage){ $UsageF=[string]$cjP.paths.usage }
   if($cjP.paths.cost){ $CostF=[string]$cjP.paths.cost }
@@ -127,7 +155,7 @@ if(-not $mu.WaitOne(90000)){
 # 锁二停止开关检查：kill 文件在 → 拒绝干活；刚移除 → 写恢复痕
 if(Test-Path $KillFile){
   if(-not(Test-Path $KillBlock)){ try{ [IO.File]::WriteAllText($KillBlock,'1',(New-Object Text.UTF8Encoding($false))) }catch{} }
-  try{ [IO.File]::AppendAllText($Alerts,('[RED] '+(Get-Date -Format 'yyyy-MM-dd HH:mm:ss.fff')+' module=kill fault=kill-switch msg=结晶被停止开关拦住：F:\crystal-kill\kill 存在，本轮拒绝运行，等待人工恢复（删 kill 文件）'+"`r`n"),(New-Object Text.UTF8Encoding($false))) }catch{}
+  try{ [IO.File]::AppendAllText($Alerts,('[RED] '+(Get-Date -Format 'yyyy-MM-dd HH:mm:ss.fff')+' module=kill fault=kill-switch msg=结晶被停止开关拦住：'+$KillFile+' 存在，本轮拒绝运行，等待人工恢复（删 kill 文件）'+"`r`n"),(New-Object Text.UTF8Encoding($false))) }catch{}
   Write-Output 'doctor: stopped by kill switch'
   exit 5
 }
@@ -138,7 +166,7 @@ if(Test-Path $KillBlock){
 
 # CR-008 B：三锁当前生效源 + truth.json activeConfig
 $lockRows=@()
-foreach($li in @(@{N='1';P=$Cfg1Path},@{N='2';P='F:\crystal-kill\conf\lock2-kill.json'},@{N='3';P='F:\crystal-l0\conf\lock3-fallback.json'})){
+foreach($li in @(@{N='1';P=$Cfg1Path},@{N='2';P=(Join-Path $KillRoot 'conf\lock2-kill.json')},@{N='3';P=(Join-Path $L0Root 'conf\lock3-fallback.json')})){
   $src='default'; $sch='default'
   try{
     $rb=[IO.File]::ReadAllBytes($li.P)
@@ -346,7 +374,7 @@ try{
     if($null -eq $qq){ Add-Line 'YELLOW' 'snowluma-pipe' 'snowluma-pipe' 'QQ.exe 未运行，跳过注入检查' }
     elseif($onebot){ Add-Line 'GREEN' 'snowluma-pipe' 'snowluma-pipe' 'QQ.exe 在、OneBot 3000 在听，管道通' }
     else{
-      Add-Line 'RED' 'snowluma-pipe' 'snowluma-pipe' '进程在但管道不通：QQ.exe 在、OneBot 3000 不通；§16.5 人工口令=停 SnowLuma-Guard→杀重复实例→单实例重启→WebUI 5099 进程注入→加载→刷新（或跑 F:\系统维护\snowluma-reinject.vbs），恢复后重跑 doctor 留痕'
+      Add-Line 'RED' 'snowluma-pipe' 'snowluma-pipe' ('进程在但管道不通：QQ.exe 在、OneBot 3000 不通；§16.5 人工口令=停 SnowLuma-Guard→杀重复实例→单实例重启→WebUI 5099 进程注入→加载→刷新（或跑 '+(Join-Path $DetMaint 'snowluma-reinject.vbs')+'），恢复后重跑 doctor 留痕')
       if($Auto -and $Fake -eq '' -and $f.fix.kind -eq 'manual'){ Add-Line 'YELLOW' $f.module $f.id 'fix.kind=manual，不自动修，按上行提示人工处理' }
     }
   }
@@ -369,7 +397,7 @@ try{
     else{ Add-Line 'GRAY' 'stamps' 'stamp-starvation' ('外盖戳断供：今日戳缺失或超 30 小时未更新；禁止自补，由 CrystalL0-Stamp 写戳') }
   }
 
-  # ---- heartbeat（§20.1：统一 F:\crystal\data\heartbeat.json；阈值读 crystal.json checks.heartbeat.staleMinutes，缺省 30） ----
+  # ---- heartbeat（§20.1：统一 heartbeat.json（$Heart）；阈值读 crystal.json checks.heartbeat.staleMinutes，缺省 30） ----
   $f=Get-Fault 'heartbeat'
   $hbThresh=30
   try{ if($null -ne $cjhb.checks -and $null -ne $cjhb.checks.heartbeat -and $null -ne $cjhb.checks.heartbeat.staleMinutes){ $hbThresh=[int]$cjhb.checks.heartbeat.staleMinutes } }catch{}
@@ -380,7 +408,7 @@ try{
       [IO.File]::WriteAllText($Heart,('{"by":"doctor","at":"'+$hbMtime.ToString('yyyy-MM-dd HH:mm:ss')+'"}'),(New-Object Text.UTF8Encoding($false)))
       (Get-Item $Heart).LastWriteTime=$hbMtime
       Rename-Item $oldHb ($oldHb+'.migrated-20261119') -ErrorAction SilentlyContinue
-      [IO.File]::AppendAllText($Alerts,('[HEARTBEAT-MIGRATED] '+(Get-Date -Format 'yyyy-MM-dd HH:mm:ss.fff')+' from=data\crystal\heartbeat.txt to=F:\crystal\data\heartbeat.json mtime='+$hbMtime.ToString('yyyy-MM-dd HH:mm:ss')+"`r`n"),(New-Object Text.UTF8Encoding($false)))
+      [IO.File]::AppendAllText($Alerts,('[HEARTBEAT-MIGRATED] '+(Get-Date -Format 'yyyy-MM-dd HH:mm:ss.fff')+' from=data\crystal\heartbeat.txt to='+$Heart+' mtime='+$hbMtime.ToString('yyyy-MM-dd HH:mm:ss')+"`r`n"),(New-Object Text.UTF8Encoding($false)))
     }catch{}
   }
   if(Is-Frozen $f){ Add-Line 'YELLOW' $f.module $f.id ('frozen at '+$f.frozenAt+'：'+$f.frozenReason+'，只诊断不修') }
@@ -400,7 +428,7 @@ try{
   if(Test-Path $RenderHashLib){ try{ . $RenderHashLib }catch{} }
   $baselineMap=@{}
   try{
-    $bj=Get-Content 'F:\crystal\data\render-baseline.json' -Raw -Encoding UTF8 -ErrorAction SilentlyContinue | ConvertFrom-Json
+    $bj=Get-Content $BaselineF -Raw -Encoding UTF8 -ErrorAction SilentlyContinue | ConvertFrom-Json
     if($null -ne $bj.entries){
       $bt=[string]$bj.builtAt
       foreach($be in @($bj.entries)){ if($null -ne $be.path){ $be | Add-Member -NotePropertyName builtAt -NotePropertyValue $bt -Force; $baselineMap[[string]$be.path]=$be } }
@@ -414,11 +442,12 @@ try{
   }
   elseif($Fake -eq 'handedit-content'){
     Write-Output ('doctor: [FAKE handedit-content] 演示（不落盘）：对沙箱篡改副本跑内容级比对')
-    $demoPath='F:\_crystal-sandbox\handedit\inject-table.json'
+    $demoPath=Join-Path $SandboxHome 'handedit\inject-table.json'
     if(Test-Path $demoPath){
       $facts=Get-RenderNormFacts -Path $demoPath -Kind 'inject-table'
       $be2=$null
-      if($baselineMap.ContainsKey('F:\qq-dsh-bridge\qq-bridge\state\inject-table.json')){ $be2=$baselineMap['F:\qq-dsh-bridge\qq-bridge\state\inject-table.json'] }
+      $injectKey=(Join-Path $DetBridge 'state\inject-table.json')
+      if($baselineMap.ContainsKey($injectKey)){ $be2=$baselineMap[$injectKey] }
       if($null -ne $facts -and $null -ne $be2){
         if($facts.normHash -ne [string]$be2.normHash){ Write-Output ('doctor: [YELLOW] module=renders fault=hand-edit msg=r1 内容变了：'+$demoPath+'（归一化哈希不等，基线建于 '+$be2.builtAt+'）') }
         else{ Write-Output ('doctor: [GREEN] '+$demoPath+' 与基线一致') }
@@ -460,13 +489,13 @@ try{
   $f=Get-Fault 'cookies-header-overflow'
   if($Fake -eq 'cookies'){
     Write-Output 'doctor: [FAKE cookies] 演示（不落盘）：假设 dsh-auth- 计数=70'
-    Write-Output 'doctor: [RED] module=cookies fault=cookies-header-overflow msg=实测 70 > 期望 <=68（crystal.json checks.cookies.errorCount），证据=F:\_crystal-sandbox\cookies\Cookies（副本）'
+    Write-Output ('doctor: [RED] module=cookies fault=cookies-header-overflow msg=实测 70 > 期望 <=68（crystal.json checks.cookies.errorCount），证据='+(Join-Path $ckDir 'Cookies')+'（副本）')
   }
   elseif(Is-Frozen $f){ Add-Line 'YELLOW' $f.module $f.id ('frozen at '+$f.frozenAt+'：'+$f.frozenReason+'，只诊断不修') }
   else {
     $ckWarn=60; $ckErr=68
     $ckSrc=Join-Path $env:APPDATA '@deepseek-ai\dsh-desktop\Network\Cookies'
-    $ckDir='F:\_crystal-sandbox\cookies'
+    $ckDir=Join-Path $SandboxHome 'cookies'
     try{
       $cjObj2=Get-Content (Join-Path $Base 'crystal.json') -Raw -Encoding UTF8 | ConvertFrom-Json
       if($null -ne $cjObj2.checks -and $null -ne $cjObj2.checks.cookies){
@@ -496,7 +525,7 @@ try{
   $f=Get-Fault 'config-version-mismatch'
   if($Fake -eq 'version'){
     Write-Output 'doctor: [FAKE version] 演示（不落盘）：假设 dsh-token-meter=0.2.2-rc.1 与宿主 0.2.2-rc.3 不等'
-    Write-Output 'doctor: [YELLOW] module=config fault=config-version-mismatch msg=实测 dsh-token-meter=0.2.2-rc.1、期望=0.2.2-rc.3、证据=C:\Users\丽微\.dsh\profiles\desktop\package.json（dependencies.dsh-token-meter）'
+    Write-Output ('doctor: [YELLOW] module=config fault=config-version-mismatch msg=实测 dsh-token-meter=0.2.2-rc.1、期望=0.2.2-rc.3、证据='+$ProfilePkg+'（dependencies.dsh-token-meter）')
   }
   elseif(Is-Frozen $f){ Add-Line 'YELLOW' $f.module $f.id ('frozen at '+$f.frozenAt+'：'+$f.frozenReason+'，只诊断不修') }
   else {
@@ -510,7 +539,7 @@ try{
     }catch{}
     if($null -eq $hostVer){ Add-Line 'YELLOW' 'config' 'config-version-mismatch' ('宿主版本读不到（注册表无 DeepSeek Harness）') }
     else {
-      $pp='C:\Users\丽微\.dsh\profiles\desktop\package.json'
+      $pp=$ProfilePkg
       try{
         $pj=Get-Content $pp -Raw -Encoding UTF8 | ConvertFrom-Json
         $bad=@()
@@ -532,21 +561,21 @@ try{
   $f=Get-Fault 'mount-missing'
   if($Fake -eq 'mount'){
     Write-Output 'doctor: [FAKE mount] 演示（不落盘）：假设插件目录 Junction 缺失'
-    Write-Output 'doctor: [RED] module=mount fault=mount-missing msg=实测 ReparsePoint=False、期望=True、证据=C:\Users\丽微\.dsh\plugins\dsh-crystal'
+    Write-Output ('doctor: [RED] module=mount fault=mount-missing msg=实测 ReparsePoint=False、期望=True、证据='+(Join-Path $DetUser '.dsh\plugins\dsh-crystal'))
   }
   elseif(Is-Frozen $f){ Add-Line 'YELLOW' $f.module $f.id ('frozen at '+$f.frozenAt+'：'+$f.frozenReason+'，只诊断不修') }
   else {
     $plgDir=$Base
     $att=(Get-Item $plgDir -Force).Attributes
     if($att -band [IO.FileAttributes]::ReparsePoint){ Add-Line 'GREEN' 'mount' 'mount-missing' ('实测 ReparsePoint=True（期望 True），证据='+$plgDir) }
-    else{ Add-Line 'RED' 'mount' 'mount-missing' ('实测 ReparsePoint=False、期望=True（§14.1② Junction）、证据='+$plgDir+'；补：迁移目录后 mklink /J 指回（回滚见 F:\crystal\迁移记录）') }
-    $ag='C:\Users\丽微\.dsh\AGENTS.md'
+    else{ Add-Line 'RED' 'mount' 'mount-missing' ('实测 ReparsePoint=False、期望=True（§14.1② Junction）、证据='+$plgDir+'；补：迁移目录后 mklink /J 指回（回滚见 '+$CrystalHome+'\迁移记录）') }
+    $ag=Join-Path $DetUser '.dsh\AGENTS.md'
     try{
       $agHead=(Get-Content $ag -TotalCount 10 -Encoding UTF8) -join ' '
       if($agHead -match 'crystal'){ Add-Line 'GREEN' 'mount' 'mount-missing' ('实测 顶部含 crystal 字样（期望 True），证据='+$ag+' 第 1-10 行') }
       else{ Add-Line 'RED' 'mount' 'mount-missing' ('实测 顶部 10 行无 crystal 字样、期望有标记行（§14.1①）、证据='+$ag+' 第 1-10 行；补：顶部加 crystal 标记行（有 .bak-20261119 备份）') }
     }catch{ Add-Line 'YELLOW' 'mount' 'mount-missing' ('读 '+$ag+' 失败：'+$_.Exception.Message) }
-    $pp='C:\Users\丽微\.dsh\profiles\desktop\package.json'
+    $pp=$ProfilePkg
     try{
       $pj=Get-Content $pp -Raw -Encoding UTF8 | ConvertFrom-Json
       $has=(($pj.dsh.profile.bundles -join ',') -match 'dsh-crystal')
@@ -556,7 +585,7 @@ try{
   }
 
   # ---- inventory（P3 第一段：旧插件纳管三源对账，只读绝不自动修、不计熔断） ----
-  $invFile='F:\crystal\data\plugins-inventory.json'
+  $invFile=Join-Path $DataHome 'plugins-inventory.json'
   if(-not (Test-Path $invFile)){
     Add-Line 'YELLOW' 'plugins' 'inventory' ('[INVENTORY-MISSING] 期望='+$invFile+' 实测=缺失；人工补跑 crystal-plugins.ps1 生成')
   } else {
@@ -593,8 +622,9 @@ try{
           schtasks /Query /TN $aid /FO LIST 2>$null | Out-Null
           if($LASTEXITCODE -eq 0){ $ok=$true }
         } elseif([string]$autoItem.trigger -eq 'startup'){
-          $su='C:\Users\丽微\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup'
-          if((Test-Path (Join-Path 'C:\Users\丽微\Desktop' $aid)) -or (Test-Path (Join-Path 'F:\系统维护' $aid)) -or (Test-Path (Join-Path $su $aid))){ $ok=$true }
+          $su=Join-Path $env:APPDATA 'Microsoft\Windows\Start Menu\Programs\Startup'
+          $desk=Join-Path $DetUser 'Desktop'
+          if((Test-Path (Join-Path $desk $aid)) -or (Test-Path (Join-Path $DetMaint $aid)) -or (Test-Path (Join-Path $su $aid))){ $ok=$true }
         } elseif([string]$autoItem.trigger -eq 'file'){
           if($null -ne $autoItem.path -and (Test-Path ([string]$autoItem.path))){ $ok=$true }
         } else { $ok=$true }
@@ -634,8 +664,9 @@ try{
         }
       }
     }catch{ $cfBad+=('crystal.json automation 读取失败：'+$_.Exception.Message) }
-    $lockInfo='锁文件缺失：F:\crystal\data\lock（只记录不创建）'
-    if(Test-Path 'F:\crystal\data\lock'){ $li=Get-Item 'F:\crystal\data\lock'; $lockInfo=('锁文件在场：'+$li.FullName+' 大小='+$li.Length+'B mtime='+$li.LastWriteTime.ToString('yyyy-MM-dd HH:mm:ss')) }
+    $lockFile=Join-Path $DataHome 'lock'
+    $lockInfo=('锁文件缺失：'+$lockFile+'（只记录不创建）')
+    if(Test-Path $lockFile){ $li=Get-Item $lockFile; $lockInfo=('锁文件在场：'+$li.FullName+' 大小='+$li.Length+'B mtime='+$li.LastWriteTime.ToString('yyyy-MM-dd HH:mm:ss')) }
     if($cfBad.Count -gt 0){ Add-Line 'RED' 'self' 'conflicts' ('任务冲突：'+(($cfBad | ForEach-Object { $_ }) -join '、')) }
     elseif($cfWarn.Count -gt 0){ Add-Line 'YELLOW' 'self' 'conflicts' (($cfWarn | ForEach-Object { $_ }) -join '、') }
     else{ Add-Line 'GREEN' 'self' 'conflicts' (('计划任务幂等：'+($crystalTasks -join '/')+' 各 1 条且状态正常；'+$lockInfo)) }
@@ -686,7 +717,7 @@ try{
   # ---- restart-gate（conflicts 第 4 条 + forbidden：重启只走一条通道；只读核验） ----
   $f=Get-Fault 'restart-gate'
   if($Fake -eq 'restartgate'){
-    Write-Output ('doctor: [FAKE restartgate] 演示（不落盘）：假设 F:\系统维护\重启并接桥.ps1 缺失 → YELLOW module=self fault=restart-gate msg=重启通道缺失')
+    Write-Output ('doctor: [FAKE restartgate] 演示（不落盘）：假设 '+$RestartGate+' 缺失 → YELLOW module=self fault=restart-gate msg=重启通道缺失')
   }
   elseif(Is-Frozen $f){ Add-Line 'YELLOW' $f.module $f.id ('frozen at '+$f.frozenAt+'：'+$f.frozenReason+'，只诊断不修') }
   else {
@@ -777,7 +808,7 @@ try{
     try{ [IO.File]::AppendAllText($Alerts,($bl+"`r`n"),$enc) }catch{}
     Write-Output ('doctor: '+$bl)
     if($todayCnyB -gt $warnCny){
-      # 预算到顶报警（脑公 2026-11-19 晚定）：钱线触顶→推 QQ 一条，只报警不打断工作；每天最多推一次
+      # 预算到顶报警（主人 2026-11-19 晚定）：钱线触顶→推 QQ 一条，只报警不打断工作；每天最多推一次
       try{
         $bstate=$BStateF
         $lastDay=''
@@ -786,7 +817,7 @@ try{
           $tok=[IO.File]::ReadAllText($ConsoleTok).Trim()
           $bodyFile=Join-Path $env:TEMP ('crystal-budget-'+[guid]::NewGuid().ToString('N')+'.json')
           $msg='[crystal 预算] '+$todayKeyB+' 已花 '+([math]::Round($todayCnyB,2))+' 元，触顶预警线 '+$warnCny+' 元/日，只报警不打断'
-          $bodyJson='{"userId":"2870864194","message":"'+($msg.Replace('"',''))+'"}'
+          $bodyJson='{"userId":"","message":"'+($msg.Replace('"',''))+'"}'
           [IO.File]::WriteAllText($bodyFile,$bodyJson,(New-Object Text.UTF8Encoding($false)))
           $resp=& curl.exe -s -X POST 'http://127.0.0.1:3100/api/send/private' -H ('x-console-token: '+$tok) -H 'Content-Type: application/json' --data-binary ('@'+$bodyFile) 2>&1 | Out-String
           Remove-Item $bodyFile -Force -ErrorAction SilentlyContinue
@@ -797,34 +828,37 @@ try{
     }
   }
 
-  # ---- rules（§23 规则自填+开关：只读三态，不计熔断） ----
+  # ---- rules（§23 规则自填+开关：chat/work 各 10 槽，只读三态，不计熔断） ----
   $f=Get-Fault 'rules'
   if($Fake -eq 'rules'){
     Write-Output 'doctor: [FAKE rules] 演示（不落盘）：假设 crystal.json rules 表缺失 → YELLOW 指到 rules 键'
   }
   elseif(Is-Frozen $f){ Add-Line 'YELLOW' $f.module $f.id ('frozen at '+$f.frozenAt+'：'+$f.frozenReason+'，只诊断不修') }
   else {
-    $rulesArr=$null
-    try{ $cjR=Get-Content (Join-Path $Base 'crystal.json') -Raw -Encoding UTF8 | ConvertFrom-Json; $rulesArr=$cjR.rules }catch{}
-    if($null -eq $rulesArr){ Add-Line 'YELLOW' 'crystal.json' 'rules' ('rules 表缺失：crystal.json 无 rules 键（应为规则数组，每条 id/text/enabled/scope）') }
-    elseif(@($rulesArr).Count -eq 0){ Add-Line 'YELLOW' 'crystal.json' 'rules' 'rules 表为空' }
+    $rulesObj=$null
+    try{ $cjR=Get-Content (Join-Path $Base 'crystal.json') -Raw -Encoding UTF8 | ConvertFrom-Json; $rulesObj=$cjR.rules }catch{}
+    if($null -eq $rulesObj){ Add-Line 'YELLOW' 'crystal.json' 'rules' ('rules 表缺失：crystal.json 无 rules 键（应为 {chat:[10 槽],work:[10 槽]}，每槽 id/text/enabled）') }
     else {
+      $chatA=@(); $workA=@()
+      try{ $chatA=@($rulesObj.chat) }catch{}
+      try{ $workA=@($rulesObj.work) }catch{}
+      $chatFill=@($chatA | Where-Object { $null -ne $_.text -and $_.text -ne '' }).Count
+      $workFill=@($workA | Where-Object { $null -ne $_.text -and $_.text -ne '' }).Count
       $badR=@()
-      $enabledR=0
-      foreach($rr in @($rulesArr)){
-        try{ if($rr.enabled){ $enabledR++ } }catch{}
-        $rOk=($null -ne $rr.id -and $rr.id -ne '' -and $null -ne $rr.text -and $rr.text -ne '')
+      foreach($rr in @($chatA)+@($workA)){
+        $rOk=($null -ne $rr.id -and $rr.id -ne '' -and $null -ne $rr.enabled)
         if(-not $rOk){ $badR+=([string]$rr.id) }
       }
-      if($badR.Count -gt 0){ Add-Line 'YELLOW' 'crystal.json' 'rules' ('rules 有 '+$badR.Count+' 条缺 id/text：'+($badR -join ',')) }
-      else{ Add-Line 'GREEN' 'crystal.json' 'rules' ('rules '+@($rulesArr).Count+' 条，启用 '+$enabledR+' 条，字段齐') }
+      if($badR.Count -gt 0){ Add-Line 'YELLOW' 'crystal.json' 'rules' ('rules 有 '+$badR.Count+' 槽缺 id/enabled：'+($badR -join ',')) }
+      elseif($chatA.Count -ne 10 -or $workA.Count -ne 10){ Add-Line 'YELLOW' 'crystal.json' 'rules' ('rules 槽数不对：chat='+$chatA.Count+' work='+$workA.Count+'（应各 10 槽）') }
+      else{ Add-Line 'GREEN' 'crystal.json' 'rules' ('rules chat 10 槽填 '+$chatFill+' / work 10 槽填 '+$workFill+'，字段齐') }
     }
   }
 
   # ---- receipts（§24 已读凭证：只读三态，不计熔断） ----
   $f=Get-Fault 'receipts'
   if($Fake -eq 'receipts'){
-    Write-Output 'doctor: [FAKE receipts] 演示（不落盘）：假设 read-receipts.json 缺失 → YELLOW 指到 F:\crystal\data\read-receipts.json'
+    Write-Output ('doctor: [FAKE receipts] 演示（不落盘）：假设 read-receipts.json 缺失 → YELLOW 指到 '+$RcMirror)
   }
   elseif(Is-Frozen $f){ Add-Line 'YELLOW' $f.module $f.id ('frozen at '+$f.frozenAt+'：'+$f.frozenReason+'，只诊断不修') }
   else {
@@ -870,7 +904,7 @@ try{
     else{ Add-Line 'GREEN' 'crystal' 'plugin-toggle' ('plugin-toggles 台账 '+$ptCnt+' 条登记，无到期未关') }
   }
 
-  # ---- plugin-demand（脑公 m03412 按需调度：demand 三档 vs 盘面 bundles vs 台账，只读，不计熔断） ----
+  # ---- plugin-demand（主人 m03412 按需调度：demand 三档 vs 盘面 bundles vs 台账，只读，不计熔断） ----
   $f=Get-Fault 'plugin-demand'
   if($Fake -eq 'plugindemand'){
     Write-Output 'doctor: [FAKE plugindemand] 演示（不落盘）：假设 on-demand 插件 lease 过期 → YELLOW [PLUGIN-AUTO-OFF-DUE]；off 档被启用 → YELLOW 越权'
@@ -957,7 +991,7 @@ try{
       if($Auto -and $Fake -eq '' -and $f.fix.kind -eq 'auto'){
         try{
           Snap('fallback 修复前：缺失或非法')
-          $tpl='{"version":1,"chat":{"rules":["称呼一律「爱丽丝的脑公」","一句话一条，不堆信息","思考用最低档"],"tools":["qq_send_message","qq_reply","qq_send_voice","memory"]},"work":{"rules":["改前备份、改后写改动记录","干活档不拦","超钱只报不停工","动根基先问脑公"],"tools":["*"]}}'
+          $tpl='{"version":1,"chat":{"rules":["称呼一律「主人」","一句话一条，不堆信息","思考用最低档"],"tools":["qq_send_message","qq_reply","qq_send_voice","memory"]},"work":{"rules":["改前备份、改后写改动记录","干活档不拦","超钱只报不停工","动根基先问主人"],"tools":["*"]}}'
           [IO.File]::WriteAllText($Fallback,$tpl,(New-Object Text.UTF8Encoding($false)))
           $fb=Read-Json $Fallback
           $fixed=($null -ne $fb)
@@ -1020,6 +1054,21 @@ $unresolvedRed=@($script:faultLevels.GetEnumerator() | Where-Object { $_.Value -
   $finalGreen=@($script:faultLevels.GetEnumerator() | Where-Object { $_.Value -eq 'GREEN' })
   $finalGray=@($script:faultLevels.GetEnumerator() | Where-Object { $_.Value -eq 'GRAY' })
   if($Fake -eq '' -and $unresolvedRed.Count -eq 0 -and $finalYellow.Count -eq 0){ Snap 'doctor 全绿快照' 'green' }
+  # [fix-20261120-P2d] 桌宠提醒总线：有红就进 pet-inbox（30 分钟节流，独立于 -PushQQ）
+  if($Fake -eq '' -and $unresolvedRed.Count -gt 0){
+    try{
+      $petSt=Join-Path $Data 'pet-tell.state.json'
+      $nowMs=[DateTimeOffset]::Now.ToUnixTimeMilliseconds(); $lastMs=0
+      try{ $ps2=Get-Content $petSt -Raw -Encoding UTF8 | ConvertFrom-Json; if($null -ne $ps2.lastAt){ $lastMs=[int64]$ps2.lastAt } }catch{}
+      if($nowMs - $lastMs -ge 1800000){
+        $tell=Join-Path $PSScriptRoot 'crystal-pet-tell.ps1'
+        $first2=@($script:lines | Where-Object { $_ -like '[[]RED[]]*' } | Select-Object -First 1)[0]
+        $pt=('doctor 有 '+$unresolvedRed.Count+' 个红项：'+$first2); if($pt.Length -gt 120){ $pt=$pt.Substring(0,120) }
+        & $tell -Text $pt -Level 'red'
+        try{ [IO.File]::WriteAllText($petSt, ('{"lastAt":'+$nowMs+'}'), (New-Object Text.UTF8Encoding($false))) }catch{}
+      }
+    }catch{}
+  }
   if(-not $Quiet){
     $script:lines | Where-Object { $_ -like '[[]RED[]]*' } | ForEach-Object { Write-Output $_ }
     Write-Output ('doctor: '+$unresolvedRed.Count+' 未解决红 / '+$finalYellow.Count+' 黄 / '+$finalGreen.Count+' 绿 / '+$finalGray.Count+' 灰')
@@ -1036,9 +1085,9 @@ $unresolvedRed=@($script:faultLevels.GetEnumerator() | Where-Object { $_.Value -
     $first=@($script:lines | Where-Object { $_ -like '[[]RED[]]*' } | Select-Object -First 1)[0]
     $msg='[crystal 红警] doctor：'+$unresolvedRed.Count+' 个未解决红；首条：'+$first
     if($msg.Length -gt 480){ $msg=$msg.Substring(0,480) }
-    $body=@{userId='2870864194'; message=$msg} | ConvertTo-Json -Compress
+    $body=@{userId=''; message=$msg} | ConvertTo-Json -Compress
     $resp = Invoke-RestMethod -Method Post -Uri 'http://127.0.0.1:3100/api/send/private' -Headers @{'x-console-token'=$tok} -ContentType 'application/json; charset=utf-8' -Body $body -TimeoutSec 10
-    Add-Line 'GREEN' 'self' 'push-qq' 'QQ 红警已推送 private:2870864194'
+    Add-Line 'GREEN' 'self' 'push-qq' 'QQ 红警已推送 private:'
     try{ $respTxt=($resp | ConvertTo-Json -Compress); if($respTxt.Length -gt 300){ $respTxt=$respTxt.Substring(0,300) } }catch{ $respTxt='(无响应体)' }
     try{ [IO.File]::AppendAllText($Alerts,('[PUSH] '+(Get-Date -Format 'yyyy-MM-dd HH:mm:ss.fff')+' to=owner channel=qq result=ok resp='+$respTxt+"`r`n"),(New-Object Text.UTF8Encoding($false))) }catch{}
     try{ [IO.File]::WriteAllText($pushState, ('{"lastPushedAt":'+$nowMs+'}'), (New-Object Text.UTF8Encoding($false))) }catch{}
@@ -1052,7 +1101,7 @@ $unresolvedRed=@($script:faultLevels.GetEnumerator() | Where-Object { $_.Value -
 if($Fake -eq ''){
   try{
     $pi=Get-CrystalPricing -OverrideNow $PricingNow
-    $pline='[PRICING] '+(Get-Date -Format 'yyyy-MM-dd HH:mm:ss.fff')+' tier='+$pi.tier+' 当前='+$pi.label+' 下一窗口='+$pi.nextLabel+' '+$pi.nextMinutes+' 分钟 usage-source=none（真实 usage 写入端待授权，见 F:\crystal\data\cost.jsonl）'
+    $pline='[PRICING] '+(Get-Date -Format 'yyyy-MM-dd HH:mm:ss.fff')+' tier='+$pi.tier+' 当前='+$pi.label+' 下一窗口='+$pi.nextLabel+' '+$pi.nextMinutes+' 分钟 usage-source=none（真实 usage 写入端待授权，见 '+$CostF+'）'
     if($pi.fallback){ $pline+=' [CONF-FALLBACK]'; try{ if(Get-Command Write-CrystalFallback -ErrorAction SilentlyContinue){ Write-CrystalFallback -Module 'doctor-pricing' -Reason 'crystal.json pricing 段缺失或非法' -FallbackTo '默认窗口 09:00-12:00/14:00-18:00' | Out-Null } }catch{} }
     try{ [IO.File]::AppendAllText($Alerts,($pline+"`r`n"),(New-Object Text.UTF8Encoding($false))) }catch{}
     if(-not $Quiet){ Write-Output ('doctor: '+$pline) }
@@ -1061,7 +1110,7 @@ if($Fake -eq ''){
       foreach($it in @($q.items | Where-Object { $_.status -eq 'pending' })){
         $force=$false; try{ if($it.force -eq $true){ $force=$true } }catch{}
         if($pi.tier -eq 'peak' -and -not $force){
-          $qline='[QUEUE-WAIT] '+(Get-Date -Format 'yyyy-MM-dd HH:mm:ss.fff')+' item='+$it.id+' tier=peak 高峰等待（脑公喊「现在做」即插队）'
+          $qline='[QUEUE-WAIT] '+(Get-Date -Format 'yyyy-MM-dd HH:mm:ss.fff')+' item='+$it.id+' tier=peak 高峰等待（主人喊「现在做」即插队）'
           try{ [IO.File]::AppendAllText($Alerts,($qline+"`r`n"),(New-Object Text.UTF8Encoding($false))) }catch{}
           if(-not $Quiet){ Write-Output ('doctor: '+$qline) }
           continue

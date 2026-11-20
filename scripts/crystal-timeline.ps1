@@ -3,11 +3,16 @@
 # 事件源：alerts.log（[SELF-STOP]/[CONF-*]/[ROLLBACK-*]/[MOUNT-FIXED]/[PUSH] 等）、fallbacks.log（[LOCK-SKIP]/[LOCK-FAIL]/[FALLBACK*]）、
 #         daily-scan.log（[DAILY-SCAN]/[PRICING]/[BUDGET-WARN]/[RECEIPTS]）、plugin-toggles.jsonl（[PLUGIN-TOGGLE]）、
 #         read-receipts.jsonl（[RECEIPT]）、usage.jsonl（bridge-start）
-# 只读、绝不写任何被读文件；产出 F:\crystal\data\timeline.txt（重生成，非追加）
+# 只读、绝不写任何被读文件；产出 $Out（重生成，非追加）
 param([int]$Count=20)
 $ErrorActionPreference='SilentlyContinue'
-$Data='F:\crystal\data'
-$PluginData='C:\Users\丽微\.dsh\plugins\dsh-crystal\data\crystal'
+$Plugin=(Get-Item (Join-Path $PSScriptRoot '..')).FullName
+$Data=Join-Path $env:LOCALAPPDATA 'crystal\data'
+try{
+  $detT=Get-Content (Join-Path $Plugin 'data\detected.json') -Raw -Encoding UTF8 | ConvertFrom-Json
+  if($detT.dataRoot){ $Data=[string]$detT.dataRoot }
+}catch{}
+$PluginData=Join-Path $Plugin 'data\crystal'
 $Out=Join-Path $Data 'timeline.txt'
 $enc=New-Object Text.UTF8Encoding($false)
 $events=@()

@@ -1,10 +1,16 @@
-﻿# crystal-intercepts.ps1 - 拦截账：只读展示 F:\crystal\data\intercepts.jsonl（熔断/超时/兜底拦截留痕）
+﻿# crystal-intercepts.ps1 - 拦截账：只读展示拦截账本（熔断/超时/兜底拦截留痕）
 # 账本缺失=正常（尚无拦截事件）；路径可用 crystal.json paths.intercepts 覆盖
 param([int]$Tail=10)
 $ErrorActionPreference='SilentlyContinue'
-$f='F:\crystal\data\intercepts.jsonl'
+$Plugin=(Get-Item (Join-Path $PSScriptRoot '..')).FullName
+$DataHome=Join-Path $env:LOCALAPPDATA 'crystal\data'
 try{
-  $t=Get-Content 'C:\Users\丽微\.dsh\plugins\dsh-crystal\crystal.json' -Raw -Encoding UTF8 | ConvertFrom-Json
+  $detI=Get-Content (Join-Path $Plugin 'data\detected.json') -Raw -Encoding UTF8 | ConvertFrom-Json
+  if($detI.dataRoot){ $DataHome=[string]$detI.dataRoot }
+}catch{}
+$f=Join-Path $DataHome 'intercepts.jsonl'
+try{
+  $t=Get-Content (Join-Path $Plugin 'crystal.json') -Raw -Encoding UTF8 | ConvertFrom-Json
   if($null -ne $t.paths -and $null -ne $t.paths.intercepts -and $t.paths.intercepts -ne ''){ $f=[string]$t.paths.intercepts }
 }catch{}
 if(-not (Test-Path $f)){ Write-Output '[INTERCEPTS] 账本为空（尚无熔断/超时拦截事件）'; exit 0 }

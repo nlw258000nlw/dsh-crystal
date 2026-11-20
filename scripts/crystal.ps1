@@ -1,21 +1,50 @@
 ﻿# crystal.ps1 - dsh-crystal CLI 口令面（§10.6）：六个动词 status|doctor|build|rollback|where|count
-# 每动词 stdout ≤12 行（进对话只贴摘要），全文落 F:\crystal\data\logs\cli-<verb>-<时间戳>.log
+# 每动词 stdout ≤12 行（进对话只贴摘要），全文落 dataHome\logs\cli-<verb>-<时间戳>.log
 # 红线：只读为主，不改现网六件、不重启 DSH/桥、不碰 SnowLuma-Guard
 param([string]$Verb='status', [string]$Arg1='', [string]$Arg2='')
 $ErrorActionPreference='SilentlyContinue'
-$Plugin='C:\Users\丽微\.dsh\plugins\dsh-crystal'
+$Plugin=(Get-Item (Join-Path $PSScriptRoot '..')).FullName
 $CrystalJson=Join-Path $Plugin 'crystal.json'
 $Data=Join-Path $Plugin 'data\crystal'
-$LogsDir='F:\crystal\data\logs'
 $Doctor=Join-Path $Plugin 'scripts\doctor.ps1'
 $Build=Join-Path $Plugin 'scripts\crystal-build.ps1'
 $Rollback=Join-Path $Plugin 'scripts\rollback.ps1'
-$Queue='F:\crystal\data\queue.json'
-$Usage='F:\crystal\data\usage.log'
 $SnapDir=Join-Path $Data 'snapshots'
 $Fallbacks=Join-Path $Data 'fallbacks.log'
 $enc=New-Object Text.UTF8Encoding($false)
 $t=$null; try{ $t=Get-Content $CrystalJson -Raw -Encoding UTF8 | ConvertFrom-Json }catch{}
+# ---- 去本机化（P7）：detected.json + crystal.json paths 决定数据/外设目录 ----
+$DetF=Join-Path $Plugin 'data\detected.json'
+$DetHome=Join-Path $env:LOCALAPPDATA 'crystal'
+$DataHome=Join-Path $DetHome 'data'
+$KillRoot=Join-Path $DetHome 'kill'; $L0Root=Join-Path $DetHome 'l0'; $BackupRoot=Join-Path $DetHome 'backup'
+$BridgeHome=''; $MaintHome=''
+if(-not (Test-Path $DetF)){ try{ & powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot 'detect.ps1') -Quiet | Out-Null }catch{} }
+if(Test-Path $DetF){
+  try{
+    $det=Get-Content $DetF -Raw -Encoding UTF8 | ConvertFrom-Json
+    if($det.crystalHome){ $DetHome=[string]$det.crystalHome }
+    if($det.dataRoot){ $DataHome=[string]$det.dataRoot }
+    if($det.killRoot){ $KillRoot=[string]$det.killRoot }
+    if($det.l0Root){ $L0Root=[string]$det.l0Root }
+    if($det.backupRoot){ $BackupRoot=[string]$det.backupRoot }
+    if($det.bridgeHome){ $BridgeHome=[string]$det.bridgeHome }
+    if($det.maintHome){ $MaintHome=[string]$det.maintHome }
+  }catch{}
+}
+try{
+  $cjP=$t.paths
+  if($cjP.crystalHome){ $DetHome=[string]$cjP.crystalHome }
+  if($cjP.dataHome){ $DataHome=[string]$cjP.dataHome }
+  if($cjP.killRoot){ $KillRoot=[string]$cjP.killRoot }
+  if($cjP.l0Root){ $L0Root=[string]$cjP.l0Root }
+  if($cjP.backupRoot){ $BackupRoot=[string]$cjP.backupRoot }
+  if($cjP.bridgeHome){ $BridgeHome=[string]$cjP.bridgeHome }
+  if($cjP.sysHome){ $MaintHome=[string]$cjP.sysHome }
+}catch{}
+$LogsDir=Join-Path $DataHome 'logs'
+$Queue=Join-Path $DataHome 'queue.json'
+$Usage=Join-Path $DataHome 'usage.log'
 $stamp=Get-Date -Format 'yyyy-MM-dd HH:mm:ss.fff'
 if(-not (Test-Path $LogsDir)){ New-Item -ItemType Directory -Force -Path $LogsDir | Out-Null }
 $logFile=Join-Path $LogsDir ('cli-'+$Verb.ToLower()+'-'+($stamp -replace '[: .]','-')+'.log')
@@ -33,6 +62,12 @@ function Flush([int]$exitCode){
 switch($Verb.ToLower()){
   'status' {
     Say ('[crystal status] '+$stamp)
+    if($Arg1 -eq 'json'){
+      $detF=Join-Path $Plugin 'data\detected.json'
+      if(-not (Test-Path $detF)){ & powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $Plugin 'scripts\detect.ps1') -Quiet 2>$null }
+      if(Test-Path $detF){ Write-Output (Get-Content $detF -Raw -Encoding UTF8); exit 0 }
+      else { Say 'detected.json 缺失且探测失败'; Flush 2 }
+    }
     if($null -eq $t){ Say '总表: crystal.json 读不出（详见 logs）'; Flush 2 }
     Say ('总表: schema='+$t.schemaVersion+' writer='+$t._writer+' writtenAt='+$t._writtenAt)
     $docOut = & powershell -NoProfile -ExecutionPolicy Bypass -File $Doctor 2>&1 | Out-String
@@ -50,9 +85,13 @@ switch($Verb.ToLower()){
       $rl=('{0} 条，启用 {1} 条' -f $rc,$re)
     }
     Say ('rules: '+$rl)
-    
-    Say ('rules: '+$rl)
     Flush 0
+  }
+  'detect' {
+    Say ('[crystal detect] '+$stamp)
+    $dOut = & powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $Plugin 'scripts\detect.ps1') 2>&1 | Out-String
+    foreach($ln in @($dOut -split "`r?`n")){ if($ln.Trim()){ Say ($ln.Trim()) } }
+    Flush $LASTEXITCODE
   }
   'check' {
     Say ('[crystal check] '+$stamp)
@@ -109,7 +148,7 @@ switch($Verb.ToLower()){
   }
   'where' {
     Say ('[crystal where] '+$stamp+' 查='+$Arg1)
-    $map=@{ 'crystal'=$CrystalJson; 'truth'=(Join-Path $Data 'truth.json'); 'doctor'=$Doctor; 'build'=$Build; 'rollback'=$Rollback; 'lock1'='F:\crystal\conf\lock1-selfstop.json'; 'lock2'='F:\crystal-kill\conf\lock2-kill.json'; 'lock3'='F:\crystal-l0\conf\lock3-fallback.json'; 'queue'=$Queue; 'usage'=$Usage; 'logs'=$LogsDir; 'r1'='F:\qq-dsh-bridge\qq-bridge\state\inject-table.json'; 'r2'='F:\qq-dsh-bridge\qq-bridge\plugins\qq-agent-presets\qq-tool-restrict.mjs'; 'r3'='F:\qq-dsh-bridge\qq-bridge\src\bridge.js'; 'r4'='F:\qq-dsh-bridge\qq-bridge\plugins\qq-agent-presets\presets'; 'r5'='C:\Users\丽微\.dsh\AGENTS.md'; 'r6'='F:\qq-dsh-bridge\qq-bridge\config.json' }
+    $map=@{ 'crystal'=$CrystalJson; 'truth'=(Join-Path $Data 'truth.json'); 'doctor'=$Doctor; 'build'=$Build; 'rollback'=$Rollback; 'lock1'=(Join-Path $DetHome 'conf\lock1-selfstop.json'); 'lock2'=(Join-Path $KillRoot 'conf\lock2-kill.json'); 'lock3'=(Join-Path $L0Root 'conf\lock3-fallback.json'); 'queue'=$Queue; 'usage'=$Usage; 'logs'=$LogsDir; 'r1'=(Join-Path $BridgeHome 'state\inject-table.json'); 'r2'=(Join-Path $BridgeHome 'plugins\qq-agent-presets\qq-tool-restrict.mjs'); 'r3'=(Join-Path $BridgeHome 'src\bridge.js'); 'r4'=(Join-Path $BridgeHome 'plugins\qq-agent-presets\presets'); 'r5'=(Join-Path $env:USERPROFILE '.dsh\AGENTS.md'); 'r6'=(Join-Path $BridgeHome 'config.json') }
     if(-not $Arg1){ Say ('用法: crystal where <名字>；可选: '+($map.Keys -join ', ')); Flush 0 }
     $k=$Arg1.ToLower()
     if($map.ContainsKey($k)){
@@ -136,7 +175,7 @@ switch($Verb.ToLower()){
   }
   'plugins' {
     Say ('[crystal plugins] '+$stamp)
-    $inv='F:\crystal\data\plugins-inventory.json'
+    $inv=Join-Path $DataHome 'plugins-inventory.json'
     if(-not (Test-Path $inv)){ Say ('plugins-inventory.json 缺失：'+$inv+'（先跑 crystal-plugins.ps1）'); Flush 1 }
     $iv=Get-Content $inv -Raw -Encoding UTF8 | ConvertFrom-Json
     $cov=@($iv.entries | Where-Object { $_.status -eq 'covered' }).Count
@@ -150,9 +189,9 @@ switch($Verb.ToLower()){
     Flush 0
   }
   'receipts' {
-    $rf='F:\crystal\data\read-receipts.jsonl'
+    $rf=Join-Path $DataHome 'read-receipts.jsonl'
     $rn=0; try{ $rn=@(Get-Content $rf -Encoding UTF8).Count }catch{}
-    $rm='F:\crystal\data\read-receipts.json'
+    $rm=Join-Path $DataHome 'read-receipts.json'
     $rmt='缺'
     try{ if(Test-Path $rm){ $rmt=(Get-Item $rm).LastWriteTime.ToString('MM-dd HH:mm:ss') } }catch{}
     Say ('read-receipts.jsonl: '+$rn+' 行凭证; 快照: '+$rmt)
@@ -181,7 +220,7 @@ switch($Verb.ToLower()){
     Flush 0
   }
   'daily' {
-    # P7 创意③：每日体检日报（crystal daily 只落盘；crystal daily push 额外推脑公私聊）
+    # P7 创意③：每日体检日报（crystal daily 只落盘；crystal daily push 额外推主人私聊）
     $dArgs=@()
     if($Arg1 -eq 'push'){ $dArgs+='-Push' }
     & powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot 'crystal-daily.ps1') @dArgs
@@ -200,7 +239,7 @@ switch($Verb.ToLower()){
     Flush $LASTEXITCODE
   }
   'backup' {
-    # 一键回滚现行备份刷新（F:\备份\现行-*，只留最新 2 份）
+    # 一键回滚现行备份刷新（$BackupRoot\现行-*，只留最新 2 份）
     & powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot 'crystal-backup.ps1')
     Flush $LASTEXITCODE
   }
@@ -223,7 +262,13 @@ switch($Verb.ToLower()){
       Say ('pet: enabled='+$pp.enabled+' voice='+$pp.voice+' intervalMin='+$pp.intervalMin+' silent='+$pp.silentFrom+'-'+$pp.silentTo+' 运行中='+($running -gt 0))
       Flush 0; return
     }
-    Start-Process powershell -ArgumentList '-STA','-NoProfile','-ExecutionPolicy','Bypass','-File',(Join-Path $PSScriptRoot 'crystal-pet.ps1')
+    # 2026-11-20 14:05：优先走无声启动器（裸起 powershell 会闪一次黑框）
+    $vbs=Join-Path (Split-Path -Parent (Split-Path -Parent $PSScriptRoot)) 'pet-launch.vbs'
+    if(Test-Path $vbs){
+      Start-Process 'wscript.exe' -ArgumentList '//nologo',('"'+$vbs+'"')
+    }else{
+      Start-Process powershell -ArgumentList '-STA','-NoProfile','-ExecutionPolicy','Bypass','-File',(Join-Path $PSScriptRoot 'crystal-pet.ps1')
+    }
     Say 'pet 已启动（前台小窗，右键退出）'
     Flush 0
   }
@@ -238,6 +283,10 @@ switch($Verb.ToLower()){
   }
   'fortune' {
     & powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot 'crystal-fortune.ps1')
+    Flush $LASTEXITCODE
+  }
+  'mem' {
+    & powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot 'crystal-mem.ps1') -Verb $Arg1
     Flush $LASTEXITCODE
   }
   'intercepts' {
@@ -260,7 +309,7 @@ switch($Verb.ToLower()){
     Say ('queue: '+$qn+' 件排队')
     $sn=0; try{ $sn=@(Get-ChildItem $SnapDir -Directory).Count }catch{}
     $costN=0; $costAmt=0.0; $costRows=@()
-    $costP='F:\crystal\data\cost.jsonl'
+    $costP=Join-Path $DataHome 'cost.jsonl'
     try{ $cj=(Get-Content (Join-Path $PSScriptRoot '..\crystal.json') -Raw -Encoding UTF8 | ConvertFrom-Json); if($cj.paths.cost){ $costP=[string]$cj.paths.cost } }catch{}
     try{ $costRows=@(Get-Content $costP -Encoding UTF8 | Where-Object { $_ -and -not $_.StartsWith('#') }) }catch{}
     foreach($r in $costRows){ $costN++; try{ $parts=($r -split '\|'); $amt=[double]$parts[$parts.Count-1]; if($amt){ $costAmt+=$amt } }catch{} }

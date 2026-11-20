@@ -2,7 +2,7 @@
 # 用法：crystal-unlock.ps1 -Fault <id> -Pass <口令>；无 -Pass 或口令错 → 拒绝并写 alerts.log 一行；成功清 frozen 三字段并写解冻痕。
 param([string]$Fault='',[string]$Pass='')
 $ErrorActionPreference='Stop'
-$Base='C:\Users\丽微\.dsh\plugins\dsh-crystal'
+$Base=(Get-Item (Join-Path $PSScriptRoot '..')).FullName
 $Data=Join-Path $Base 'data\crystal'
 $Faults=Join-Path $Data 'fault-dictionary.json'
 $Alerts=Join-Path $Data 'alerts.log'

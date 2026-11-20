@@ -1,15 +1,25 @@
 ﻿# crystal-receipts.ps1 - 已读凭证（§24/要求清单）：把桥 social-v2.json 的已读水位镜像成凭证
-# 只读桥状态：每个会话的 lastReadThroughSeq 前进时向 F:\crystal\data\read-receipts.jsonl 追加一行凭证
-# 并落 F:\crystal\data\read-receipts.json 快照（generatedAt+sources mtime）；绝不写桥侧任何文件
+# 只读桥状态：每个会话的 lastReadThroughSeq 前进时向 $DataHome\read-receipts.jsonl 追加一行凭证
+# 并落 $DataHome\read-receipts.json 快照（generatedAt+sources mtime）；绝不写桥侧任何文件
 # 用法：powershell -File crystal-receipts.ps1   （exit 0 正常；输出 [RECEIPTS] 汇总行）
 #        powershell -File crystal-receipts.ps1 mark-rules-read <key>   （九.2 干活档已读凭证登记）
 param([string]$Verb='run',[string]$Arg1='')
 $ErrorActionPreference='SilentlyContinue'
-$Base='C:\Users\丽微\.dsh\plugins\dsh-crystal'
+$Base=(Get-Item (Join-Path $PSScriptRoot '..')).FullName
 $CrystalJson=Join-Path $Base 'crystal.json'
-$Social='F:\qq-dsh-bridge\qq-bridge\state\social-v2.json'
-$Mirror='F:\crystal\data\read-receipts.json'
-$ReceiptLog='F:\crystal\data\read-receipts.jsonl'
+$DetF=Join-Path $Base 'data\detected.json'
+$DataHome=Join-Path $env:LOCALAPPDATA 'crystal\data'
+$BridgeHome=Join-Path $env:LOCALAPPDATA 'crystal\bridge'
+if(Test-Path $DetF){
+  try{
+    $det=Get-Content $DetF -Raw -Encoding UTF8 | ConvertFrom-Json
+    if($det.dataRoot){ $DataHome=[string]$det.dataRoot }
+    if($det.bridgeHome){ $BridgeHome=[string]$det.bridgeHome }
+  }catch{}
+}
+$Social=Join-Path $BridgeHome 'state\social-v2.json'
+$Mirror=Join-Path $DataHome 'read-receipts.json'
+$ReceiptLog=Join-Path $DataHome 'read-receipts.jsonl'
 $enc=New-Object Text.UTF8Encoding($false)
 try{
   $t=Get-Content $CrystalJson -Raw -Encoding UTF8 | ConvertFrom-Json
@@ -21,7 +31,7 @@ try{
 }catch{}
 if($Verb -eq 'mark-rules-read'){
   if(-not $Arg1){ Write-Output '用法: crystal-receipts.ps1 mark-rules-read <key>'; exit 0 }
-  $rrPath='F:\crystal\data\rules-read.json'
+  $rrPath=Join-Path $DataHome 'rules-read.json'
   $rrMap=@{}
   try{
     $rrOld=Get-Content $rrPath -Raw -Encoding UTF8 | ConvertFrom-Json
@@ -68,5 +78,5 @@ try{ [IO.File]::WriteAllText($Mirror, $mirrorObj, $enc) }catch{}
 $maxSeq=0; foreach($c in $conv){ if($c.readThroughSeq -gt $maxSeq){ $maxSeq=$c.readThroughSeq } }
 $sum='[RECEIPTS] '+$nowIso+' conversations='+$conv.Count+' 最大已读水位='+$maxSeq+' 本次新凭证='+$advances.Count+' 条'
 Write-Output $sum
-try{ [IO.File]::AppendAllText('F:\crystal\data\boot-probe.log', $sum+"`r`n", $enc) }catch{}
+try{ [IO.File]::AppendAllText((Join-Path $DataHome 'boot-probe.log'), $sum+"`r`n", $enc) }catch{}
 exit 0

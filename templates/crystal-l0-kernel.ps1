@@ -12,7 +12,7 @@ $Doctor='<PLUGIN_HOME>\scripts\doctor.ps1'
 function Log0([string]$line){
   [IO.File]::AppendAllText($L0Log,('[L0] '+(Get-Date -Format 'yyyy-MM-dd HH:mm:ss.fff')+' '+$line+"`r`n"),(New-Object Text.UTF8Encoding($false)))
 }
-$Cfg3=@{ heartbeatStaleMin=30; minRules='chat:称呼脑公|短句口语|低档思考; work:改前备份|改后留痕|花销先说|干活档不许拦' }
+$Cfg3=@{ heartbeatStaleMin=30; minRules='chat:称呼主人|短句口语|低档思考; work:改前备份|改后留痕|花销先说|干活档不许拦' }
 $Cfg3Path=Join-Path $L0Dir 'conf\lock3-fallback.json'
 try{
   $raw=[IO.File]::ReadAllBytes($Cfg3Path)

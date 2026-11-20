@@ -1,13 +1,18 @@
 ﻿# crystal-cost.ps1 - P12⑥ 真实金额入账：usage.jsonl 真实桶 × 价目表 → cost.jsonl（只记不改账）
 # 价目表：crystal.json pricing.rates = { inputPerM, outputPerM, cacheReadPerM }（每百万 token 元）
 # 行格式：ts|source|tier|inputTokens|outputTokens|cacheReadTokens|amountCny
-# 每行按 tier 乘数：peak×2、offpeak×1（脑公 m06283 口径：高峰贵）
+# 每行按 tier 乘数：peak×2、offpeak×1（主人 m06283 口径：高峰贵）
 param([switch]$Once)
 $ErrorActionPreference='SilentlyContinue'
-$Base='F:\crystal\dsh-crystal'
-$Data='F:\crystal\data'
-$UsageFile='F:\crystal\data\usage.jsonl'
-$CostFile='F:\crystal\data\cost.jsonl'
+$Base=(Get-Item (Join-Path $PSScriptRoot '..')).FullName
+$DetF=Join-Path $Base 'data\detected.json'
+$DataHome=Join-Path $env:LOCALAPPDATA 'crystal\data'
+if(Test-Path $DetF){
+  try{ $det=Get-Content $DetF -Raw -Encoding UTF8 | ConvertFrom-Json; if($det.dataRoot){ $DataHome=[string]$det.dataRoot }; if($det.crystalHome){ $Base=[string]$det.crystalHome } }catch{}
+}
+$Data=$DataHome
+$UsageFile=Join-Path $DataHome 'usage.jsonl'
+$CostFile=Join-Path $DataHome 'cost.jsonl'
 $CrystalCfg=Join-Path $Base 'crystal.json'
 try{
   $cj=Get-Content $CrystalCfg -Raw -Encoding UTF8 | ConvertFrom-Json

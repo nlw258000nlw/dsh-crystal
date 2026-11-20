@@ -2,8 +2,13 @@
 # 版本包内容=插件根 crystal.json + scripts\*.ps1 + data\crystal\fault-dictionary.json（运行数据 truth.json/stamps/alerts/snapshots 不入包，回退不回退运行状态）
 # 用法：. '路径\crystal-version.ps1' 后调用 Save-CrystalVersion / Get-CrystalVersions / Restore-CrystalVersion
 # 全函数内部只留痕写文件+Write-Host，返回值只走 return（铁律：靠返回值判成败的函数不许 Write-Output）
-$script:VerRoot='F:\crystal\data\versions'
-$script:VerBase='C:\Users\丽微\.dsh\plugins\dsh-crystal'
+$script:VerBase=(Get-Item (Join-Path $PSScriptRoot '..')).FullName
+$VerData=Join-Path $env:LOCALAPPDATA 'crystal\data'
+try{
+  $detV=Get-Content (Join-Path $script:VerBase 'data\detected.json') -Raw -Encoding UTF8 | ConvertFrom-Json
+  if($detV.dataRoot){ $VerData=[string]$detV.dataRoot }
+}catch{}
+$script:VerRoot=Join-Path $VerData 'versions'
 function Get-CrystalSha([string]$p){
   try{
     $b=[IO.File]::ReadAllBytes($p)
@@ -75,7 +80,7 @@ function Restore-CrystalVersion{
       Copy-Item $src $dst -Force
       $restored++
     }
-    $alerts='C:\Users\丽微\.dsh\plugins\dsh-crystal\data\crystal\alerts.log'
+    $alerts=Join-Path $script:VerBase 'data\crystal\alerts.log'
     try{ [IO.File]::AppendAllText($alerts,('[ROLLBACK-VERSION] '+(Get-Date -Format 'yyyy-MM-dd HH:mm:ss.fff')+' to='+$To+' files='+$restored+' by=crystal-rollback'+"`r`n"),(New-Object Text.UTF8Encoding($false))) }catch{}
     Write-Host ('已回退到 '+$To+'（'+$restored+' 件），回退前保险包已存')
     return [pscustomobject]@{ version=$To; files=$restored }

@@ -1,12 +1,11 @@
 ﻿# crystal-bill.ps1 - 按插件分账视图（P9 ③）：只汇总 usage.jsonl 的 module 用量，不改账、不算钱
 # 用法：powershell -File crystal-bill.ps1（输出 ≤12 行；金额口径=cost.jsonl，真实 usage 写入端待授权）
 $ErrorActionPreference='SilentlyContinue'
-$UsageFile='F:\crystal\data\usage.jsonl'
-try{ $cjB=(Get-Content (Join-Path (Split-Path -Parent $PSScriptRoot) 'crystal.json') -Raw -Encoding UTF8 | ConvertFrom-Json); if($cjB.paths.usage -and $cjB.paths.usage -ne ''){ $UsageFile=[string]$cjB.paths.usage } }catch{}
-try{
-  $t=Get-Content 'C:\Users\丽微\.dsh\plugins\dsh-crystal\crystal.json' -Raw -Encoding UTF8 | ConvertFrom-Json
-  if($null -ne $t.paths -and $null -ne $t.paths.usage -and $t.paths.usage -ne ''){ $UsageFile=[string]$t.paths.usage }
-}catch{}
+$BillData=Join-Path $env:LOCALAPPDATA 'crystal\data'
+$BillPlugin=(Get-Item (Join-Path $PSScriptRoot '..')).FullName
+try{ $detB=Get-Content (Join-Path $BillPlugin 'data\detected.json') -Raw -Encoding UTF8 | ConvertFrom-Json; if($detB.dataRoot){ $BillData=[string]$detB.dataRoot } }catch{}
+$UsageFile=Join-Path $BillData 'usage.jsonl'
+try{ $cjB=(Get-Content (Join-Path $BillPlugin 'crystal.json') -Raw -Encoding UTF8 | ConvertFrom-Json); if($cjB.paths.usage -and $cjB.paths.usage -ne ''){ $UsageFile=[string]$cjB.paths.usage } }catch{}
 if(-not (Test-Path $UsageFile)){
   Write-Output '[BILL] usage.jsonl 不存在（真实用量写入端待授权后才有账单）'
   exit 0

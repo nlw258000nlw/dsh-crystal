@@ -1,15 +1,28 @@
-﻿# crystal-endpoints.ps1 - 服务发现：按 dsh-gui-port.js 判据（/api/__probe__ 回 401 且纯文本 unauthorized）探真 GUI 端口，落 F:\crystal\data\endpoints.json（§10.2）
+﻿# crystal-endpoints.ps1 - 服务发现：按 dsh-gui-port.js 判据（/api/__probe__ 回 401 且纯文本 unauthorized）探真 GUI 端口，落 $Ep（§10.2）
 # -Probe：探测并写 endpoints.json（默认）；-Check：复探对比，漂移写 [ENDPOINTS-DRIFT] 行到 alerts.log
-# 令牌自愈本段只做检测：bridge baseUrl 与 GUI 端口不一致时 mismatch=true 并建议留痕，不自动改桥配置（待脑公授权）
+# 令牌自愈本段只做检测：bridge baseUrl 与 GUI 端口不一致时 mismatch=true 并建议留痕，不自动改桥配置（待主人授权）
 param([string]$Verb='Probe', [switch]$Check)
 $ErrorActionPreference='SilentlyContinue'
 . (Join-Path $PSScriptRoot 'crystal-lock.ps1')
-$GuiJs='F:\系统维护\dsh-gui-port.js'
-$Ep='F:\crystal\data\endpoints.json'
+$Plugin=(Get-Item (Join-Path $PSScriptRoot '..')).FullName
+$MaintHome=Join-Path $env:LOCALAPPDATA 'crystal\sys'
+$DataHome=Join-Path $env:LOCALAPPDATA 'crystal\data'
+$BridgeHome=Join-Path $env:LOCALAPPDATA 'crystal\bridge'
+$DetF=Join-Path $Plugin 'data\detected.json'
+if(Test-Path $DetF){
+  try{
+    $det=Get-Content $DetF -Raw -Encoding UTF8 | ConvertFrom-Json
+    if($det.dataRoot){ $DataHome=[string]$det.dataRoot }
+    if($det.bridgeHome){ $BridgeHome=[string]$det.bridgeHome }
+    if($det.maintHome){ $MaintHome=[string]$det.maintHome }
+  }catch{}
+}
+$GuiJs=Join-Path $MaintHome 'dsh-gui-port.js'
+$Ep=Join-Path $DataHome 'endpoints.json'
 $Alerts=''
-try{ $cjep=Get-Content 'C:\Users\丽微\.dsh\plugins\dsh-crystal\crystal.json' -Raw -Encoding UTF8 | ConvertFrom-Json; if($null -ne $cjep.paths.alerts -and $cjep.paths.alerts -ne ''){ $Alerts=[string]$cjep.paths.alerts } }catch{}
+try{ $cjep=Get-Content (Join-Path $Plugin 'crystal.json') -Raw -Encoding UTF8 | ConvertFrom-Json; if($null -ne $cjep.paths.alerts -and $cjep.paths.alerts -ne ''){ $Alerts=[string]$cjep.paths.alerts } }catch{}
 if($Alerts -eq ''){ . (Join-Path $PSScriptRoot 'crystal-fallback.ps1'); $Alerts=Get-CrystalAlertsPath }
-$BridgeCfg='F:\qq-dsh-bridge\qq-bridge\config.json'
+$BridgeCfg=Join-Path $BridgeHome 'config.json'
 $enc=New-Object Text.UTF8Encoding($false)
 function Get-GuiPort{
   try{

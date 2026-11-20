@@ -202,16 +202,16 @@ try{
     }catch{ Log ('WARN：快捷方式创建失败：'+$_.Exception.Message) }
   }
   # ---- 开机自启桌宠（P12①：登录自动出现） ----
-  $petLnk=Join-Path ([Environment]::GetFolderPath('Startup')) '大肥鱼桌宠.lnk'
+  $petLnk=Join-Path ([Environment]::GetFolderPath('Startup')) '小鱼桌宠.lnk'
   if(Test-Path $petLnk){ Log ('桌宠自启已在：'+$petLnk) }
-  elseif($DryRun){ Log 'DRYRUN：将建开机自启快捷方式 大肥鱼桌宠.lnk' }
+  elseif($DryRun){ Log 'DRYRUN：将建开机自启快捷方式 小鱼桌宠.lnk' }
   else{
     try{
       $w2=New-Object -ComObject WScript.Shell
       $s2=$w2.CreateShortcut($petLnk)
       $s2.TargetPath='powershell.exe'
       $s2.Arguments='-STA -NoProfile -ExecutionPolicy Bypass -File "'+(Join-Path $PluginSrc 'scripts\crystal-pet.ps1')+'"'
-      $s2.Description='dsh-crystal 大肥鱼桌宠（登录自启）'
+      $s2.Description='dsh-crystal 小鱼桌宠（登录自启）'
       $s2.WorkingDirectory=$PluginSrc
       $s2.Save()
       Log ('桌宠自启已建：'+$petLnk)

@@ -59,7 +59,12 @@ try{
   }
 }catch{}
 # 6. bridge.js [crystal 钩子
-$br='F:\qq-dsh-bridge\qq-bridge\src\bridge.js'
+$BridgeHome=Join-Path $env:LOCALAPPDATA 'crystal\bridge'
+try{
+  $detA=Get-Content (Join-Path $Base 'data\detected.json') -Raw -Encoding UTF8 | ConvertFrom-Json
+  if($detA.bridgeHome){ $BridgeHome=[string]$detA.bridgeHome }
+}catch{}
+$br=Join-Path $BridgeHome 'src\bridge.js'
 try{
   if(Test-Path $br){
     $b=[IO.File]::ReadAllText($br)

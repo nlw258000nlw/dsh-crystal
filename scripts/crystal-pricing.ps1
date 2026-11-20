@@ -2,7 +2,7 @@
 # 用法：. "$PSScriptRoot\crystal-pricing.ps1" 之后调 Get-CrystalPricing [-OverrideNow 'yyyy-MM-ddTHH:mm:ss']（OverrideNow 必须已是 Asia/Shanghai 本地时间，仅测试用）
 # 返回：tier=peak|offpeak、label=高峰|平价、nextMinutes=下一窗口还有几分钟、nextLabel=窗口说明、fallback=是否用了默认配置
 function Get-CrystalPricing([string]$OverrideNow=''){
-  $cfg='C:\Users\丽微\.dsh\plugins\dsh-crystal\crystal.json'
+  $cfg=Join-Path (Split-Path -Parent $PSScriptRoot) 'crystal.json'
   $pricing=$null; $fallback=$false
   try{
     $raw=[IO.File]::ReadAllBytes($cfg)

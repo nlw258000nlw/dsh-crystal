@@ -1,12 +1,17 @@
-﻿# crystal-bootprobe.ps1 - 开机清单只读探活（§44）：只读判断「接回爱丽丝」与「爱丽丝自检」两条开机链，绝不启停任何进程
+﻿# crystal-bootprobe.ps1 - 开机清单只读探活（§44）：只读判断「接回小鱼」与「小鱼自检」两条开机链，绝不启停任何进程
 # 用法：powershell -File crystal-bootprobe.ps1   （探一次，贴 [BOOT-*] 行与末行，exit=缺件数）
 # 每 2 分钟一探的调度不建新任务：doctor 每次体检都会探一次（automation 检查已含在场），本脚本供人工/演练单独探活。
 $ErrorActionPreference='SilentlyContinue'
 $cj=[Text.Encoding]::UTF8.GetString([IO.File]::ReadAllBytes((Join-Path (Split-Path -Parent $PSScriptRoot) 'crystal.json'))) | ConvertFrom-Json
-$boot=@($cj.automation | Where-Object { $_.trigger -eq 'startup' -or $_.id -eq '接回爱丽丝' })
-$StartupDir='C:\Users\丽微\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup'
+$boot=@($cj.automation | Where-Object { $_.trigger -eq 'startup' -or $_.id -eq '接回小鱼' })
+$StartupDir=Join-Path $env:APPDATA 'Microsoft\Windows\Start Menu\Programs\Startup'
 try{ if($cj.paths.startupDir -and $cj.paths.startupDir -ne ''){ $StartupDir=[string]$cj.paths.startupDir } }catch{}
-$log='F:\crystal\data\boot-probe.log'
+$BootData=Join-Path $env:LOCALAPPDATA 'crystal\data'
+try{
+  $detBP=Get-Content (Join-Path (Split-Path -Parent $PSScriptRoot) 'data\detected.json') -Raw -Encoding UTF8 | ConvertFrom-Json
+  if($detBP.dataRoot){ $BootData=[string]$detBP.dataRoot }
+}catch{}
+$log=Join-Path $BootData 'boot-probe.log'
 try{ $cjBP=(Get-Content (Join-Path (Split-Path -Parent $PSScriptRoot) 'crystal.json') -Raw -Encoding UTF8 | ConvertFrom-Json); if($cjBP.paths.bootProbe -and $cjBP.paths.bootProbe -ne ''){ $log=[string]$cjBP.paths.bootProbe } }catch{}
 $enc=New-Object Text.UTF8Encoding($false)
 $miss=0

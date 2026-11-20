@@ -3,7 +3,7 @@ $ErrorActionPreference='SilentlyContinue'
 $PkgRoot=Split-Path -Parent $PSScriptRoot
 $ScanDir=$Env:CRYSTAL_HOME
 if(-not $ScanDir){ try{ $cjSc=Get-Content (Join-Path $PkgRoot 'crystal.json') -Raw -Encoding UTF8 | ConvertFrom-Json; if($cjSc.paths.crystalHome){ $ScanDir=[string]$cjSc.paths.crystalHome } }catch{} }
-if(-not $ScanDir){ $ScanDir='F:\crystal' }
+if(-not $ScanDir){ $ScanDir=Join-Path $env:LOCALAPPDATA 'crystal' }
 $Log=Join-Path $ScanDir 'data\daily-scan.log'
 $State=Join-Path $ScanDir 'data\scan-state.json'
 $CrystalData=Join-Path $PkgRoot 'data\crystal'
@@ -96,6 +96,23 @@ try{
 try{
   & powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot 'crystal-daily.ps1') -Quiet -Push 2>&1 | Out-Null
 }catch{}
+# P4 插件租期到期自动软关（2026-11-20 主人：说了关键词自动开，干完到点就该自动关；只在每日扫描里执行）
+try{
+  $ptFile=Join-Path $ScanDir 'data\plugin-toggles.json'
+  if(Test-Path $ptFile){
+    $pt=(Get-Content $ptFile -Raw -Encoding UTF8 | ConvertFrom-Json)
+    $now=Get-Date
+    $due=@($pt.entries | Where-Object { [string]$_.status -in @('on','temp') -and $_.deadline -and ([datetime]$_.deadline) -lt $now } | ForEach-Object { [string]$_.name })
+    if($due.Count -gt 0){
+      foreach($pn in $due){
+        $r=& powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot 'crystal-pluginctl.ps1') 'soft-off' $pn 2>&1 | Out-String
+        try{ [IO.File]::AppendAllText($Log,('[AUTO-OFF] '+$pn+' '+(Get-Date -Format 'HH:mm:ss')+' -> '+($r.Trim().Split("`n")[0])+"`r`n"),(New-Object Text.UTF8Encoding($false))) }catch{}
+      }
+      $script:warn++
+    }
+  }
+}catch{}
+
 $line='[DAILY-SCAN] '+(Get-Date -Format 'yyyy-MM-dd HH:mm:ss.fff')+' ok='+$script:ok+' warn='+$script:warn+' fail='+$script:fail+' 最差项='+$script:worst
 try{ [IO.File]::AppendAllText($Log,$line+"`r`n",(New-Object Text.UTF8Encoding($false))) }catch{}
 try{ [IO.File]::WriteAllText($State,('{"lastScanAt":"'+(Get-Date -Format 'yyyy-MM-dd HH:mm:ss.fff')+'"}'),(New-Object Text.UTF8Encoding($false))) }catch{}

@@ -1,9 +1,9 @@
 ﻿# crystal-provision.ps1 - §10.5 一句话重建演练：从零在沙箱重建 dsh-crystal 骨架并验收全绿
-# 只写 F:\_crystal-sandbox\provision\，不碰现网六件、不创建任务、不重启任何进程
+# 只写 $ProRoot\，不碰现网六件、不创建任务、不重启任何进程
 $ErrorActionPreference='Continue'
-$ProRoot='F:\_crystal-sandbox\provision'
+$ProRoot=Join-Path $env:LOCALAPPDATA '_crystal-sandbox\provision'
 $RunDir=Join-Path $ProRoot ('run-'+$(Get-Date -Format 'yyyyMMdd-HHmmss'))
-$PluginSrc='C:\Users\丽微\.dsh\plugins\dsh-crystal'
+$PluginSrc=(Get-Item (Join-Path $PSScriptRoot '..')).FullName
 $Build=Join-Path $PluginSrc 'scripts\crystal-build.ps1'
 $Doctor=Join-Path $PluginSrc 'scripts\doctor.ps1'
 $Enc=New-Object Text.UTF8Encoding($false)

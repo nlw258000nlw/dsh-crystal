@@ -1,9 +1,15 @@
 ﻿# crystal-keywords.ps1 - 关键词自动归纳：从 crystal.json 的 plugin-capability 条目 tasks 自动生成关键词→插件映射
-# 输出 F:\crystal\data\keyword-map.json {generatedAt, entries:[{word, plugins:[]}]}；只读总表不写回
+# 输出 $Out {generatedAt, entries:[{word, plugins:[]}]}；只读总表不写回
 # 用法：powershell -File crystal-keywords.ps1   （exit 0；输出 [KEYWORDS] 汇总行）
 $ErrorActionPreference='SilentlyContinue'
-$Cj='C:\Users\丽微\.dsh\plugins\dsh-crystal\crystal.json'
-$Out='F:\crystal\data\keyword-map.json'
+$Plugin=(Get-Item (Join-Path $PSScriptRoot '..')).FullName
+$DataHome=Join-Path $env:LOCALAPPDATA 'crystal\data'
+try{
+  $detK=Get-Content (Join-Path $Plugin 'data\detected.json') -Raw -Encoding UTF8 | ConvertFrom-Json
+  if($detK.dataRoot){ $DataHome=[string]$detK.dataRoot }
+}catch{}
+$Cj=Join-Path $Plugin 'crystal.json'
+$Out=Join-Path $DataHome 'keyword-map.json'
 try{
   $cj=Get-Content $Cj -Raw -Encoding UTF8 | ConvertFrom-Json
   if($cj.paths.keywords){ $Out=[string]$cj.paths.keywords }

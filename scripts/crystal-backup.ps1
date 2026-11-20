@@ -1,17 +1,34 @@
-﻿# crystal-backup.ps1 - 一键回滚现行备份刷新（P7 大管家创意⑤配套）：重建 F:\备份\现行-<yyyyMMdd-HHmm>
+﻿# crystal-backup.ps1 - 一键回滚现行备份刷新（P7 大管家创意⑤配套）：重建 $BakRoot\现行-<yyyyMMdd-HHmm>
 # 用法：crystal-backup.ps1（缺省刷新一份现行备份；只保留最新 2 份，其余 现行-* 删除）
-# 口径与 F:\一键回滚\一键回滚.ps1 的 BackupNote 一致=七件（桥接-bridge/维护脚本/工作区/插件配置-profile/插件-plugins/记忆/会话-今天）
-# 安全边界：只写 F:\备份\现行-*；不碰其它目录；不杀进程；会话只补今天（/MAXAGE:1）
+# 口径与 $BakRoot\..\一键回滚\一键回滚.ps1 的 BackupNote 一致=七件（桥接-bridge/维护脚本/工作区/插件配置-profile/插件-plugins/记忆/会话-今天）
+# 安全边界：只写 $BakRoot\现行-*；不碰其它目录；不杀进程；会话只补今天（/MAXAGE:1）
 param([switch]$KeepAll)
 $ErrorActionPreference='SilentlyContinue'
-$BakRoot='F:\备份'
-$Bridge='F:\qq-dsh-bridge\qq-bridge'
-$Sys='F:\系统维护'
-$Work='C:\Users\丽微\Documents\deepseek-harness'
-$Profile='C:\Users\丽微\.dsh\profiles\desktop'
-$Plugins='C:\Users\丽微\.dsh\plugins'
-$Memories='C:\Users\丽微\.dsh\memories'
-$Sessions='C:\Users\丽微\.dsh\sessions'
+$BakRoot=Join-Path $env:LOCALAPPDATA 'crystal\backup'
+$Bridge=Join-Path $env:LOCALAPPDATA 'crystal\bridge'
+$Sys=Join-Path $env:LOCALAPPDATA 'crystal\sys'
+$Work=Join-Path $env:USERPROFILE 'Documents\deepseek-harness'
+$Profile=Join-Path $env:USERPROFILE '.dsh\profiles\desktop'
+$Plugins=Join-Path $env:USERPROFILE '.dsh\plugins'
+$Memories=Join-Path $env:USERPROFILE '.dsh\memories'
+$Sessions=Join-Path $env:USERPROFILE '.dsh\sessions'
+$DetF=Join-Path (Split-Path -Parent $PSScriptRoot) 'data\detected.json'
+if(Test-Path $DetF){
+  try{
+    $det=Get-Content $DetF -Raw -Encoding UTF8 | ConvertFrom-Json
+    if($det.backupRoot){ $BakRoot=[string]$det.backupRoot }
+    if($det.bridgeHome){ $Bridge=[string]$det.bridgeHome }
+    if($det.maintHome){ $Sys=[string]$det.maintHome }
+    if($det.userHome){
+      $u=[string]$det.userHome
+      $Work=Join-Path $u 'Documents\deepseek-harness'
+      $Profile=Join-Path $u '.dsh\profiles\desktop'
+      $Plugins=Join-Path $u '.dsh\plugins'
+      $Memories=Join-Path $u '.dsh\memories'
+      $Sessions=Join-Path $u '.dsh\sessions'
+    }
+  }catch{}
+}
 try{
   $cjBk=Get-Content (Join-Path (Split-Path -Parent $PSScriptRoot) 'crystal.json') -Raw -Encoding UTF8 | ConvertFrom-Json
   if($cjBk.paths.bakRoot){ $BakRoot=[string]$cjBk.paths.bakRoot }

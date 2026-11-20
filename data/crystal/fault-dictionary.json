@@ -47,10 +47,10 @@
                        "fix":  {
                                    "kind":  "manual",
                                    "steps":  [
-                                                 "提示人工跑 F:\\系统维护\\snowluma-reinject.vbs 或桌面『接回爱丽丝』"
+                                                 "提示人工跑 F:\\系统维护\\snowluma-reinject.vbs 或桌面『接回小鱼』"
                                              ]
                                },
-                       "verify":  "3000 可连且 GET /api/connections 有 uin=2670293119",
+                       "verify":  "3000 可连且 GET /api/connections 有 uin=",
                        "frozen":  false,
                        "frozenAt":  "",
                        "frozenReason":  "",
@@ -157,7 +157,7 @@
                        "frozen":  false,
                        "frozenAt":  "",
                        "frozenReason":  "",
-                       "loc":  "C:\\Users\\丽微\\.dsh\\profiles\\desktop\\package.json"
+                       "loc":  "C:\\Users\\用户\\.dsh\\profiles\\desktop\\package.json"
                    },
                    {
                        "id":  "mount-missing",
@@ -269,7 +269,7 @@
                        "fix":  {
                                    "kind":  "none",
                                    "steps":  [
-                                                 "只诊断不修：按脑公定的字面值人工补齐 autonomy 键"
+                                                 "只诊断不修：按主人定的字面值人工补齐 autonomy 键"
                                              ]
                                },
                        "verify":  "五项齐全且类型正确=GREEN 带原值；键缺/类型坏=YELLOW 带键路径与原值",

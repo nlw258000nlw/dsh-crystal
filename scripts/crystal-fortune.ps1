@@ -8,7 +8,12 @@ $yi=@('备份整理','读档复盘','修小毛病','调配置前先落 .bak','�
 $ji=@('摸黑改配置','删文件前不备份','高峰硬跑重活','不写留痕就动手','乱改现网六件','重复造轮子','跳过自检直接报绿','把回滚点当摆设','忘记攒批清单','熬夜连轴转','把决定留给管家','口说无凭不落记录')
 $yiIdx=$hash % $yi.Count
 $jiIdx=($hash*7+3) % $ji.Count
-$stateFile='F:\crystal\data\doctor-state.json'
+$FrtData=Join-Path $env:LOCALAPPDATA 'crystal\data'
+try{
+  $detF=Get-Content (Join-Path (Split-Path -Parent $PSScriptRoot) 'data\detected.json') -Raw -Encoding UTF8 | ConvertFrom-Json
+  if($detF.dataRoot){ $FrtData=[string]$detF.dataRoot }
+}catch{}
+$stateFile=Join-Path $FrtData 'doctor-state.json'
 $cai='平：未见异常，照常安排。'
 try{
   $st=Get-Content $stateFile -Raw -Encoding UTF8 | ConvertFrom-Json

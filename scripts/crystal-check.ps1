@@ -1,6 +1,20 @@
 ﻿# crystal-check.ps1 - §25 配置体检一键化（只读）：六处生成物标记 + 三 conf 版本 + 端口一致性
 $ErrorActionPreference='SilentlyContinue'
-$Plugin='C:\Users\丽微\.dsh\plugins\dsh-crystal'
+$Plugin=(Get-Item (Join-Path $PSScriptRoot '..')).FullName
+$DetF=Join-Path $Plugin 'data\detected.json'
+$DetHome=Join-Path $env:LOCALAPPDATA 'crystal'
+$DataHome=Join-Path $DetHome 'data'
+$KillRoot=Join-Path $DetHome 'kill'; $L0Root=Join-Path $DetHome 'l0'
+if(Test-Path $DetF){
+  try{
+    $det=Get-Content $DetF -Raw -Encoding UTF8 | ConvertFrom-Json
+    if($det.crystalHome){ $DetHome=[string]$det.crystalHome }
+    if($det.dataRoot){ $DataHome=[string]$det.dataRoot }
+    if($det.killRoot){ $KillRoot=[string]$det.killRoot }
+    if($det.l0Root){ $L0Root=[string]$det.l0Root }
+  }catch{}
+}
+try{ $cjck=Get-Content (Join-Path $Plugin 'crystal.json') -Raw -Encoding UTF8 | ConvertFrom-Json; if($cjck.paths.crystalHome){ $DetHome=[string]$cjck.paths.crystalHome }; if($cjck.paths.dataHome){ $DataHome=[string]$cjck.paths.dataHome }; if($cjck.paths.killRoot){ $KillRoot=[string]$cjck.paths.killRoot }; if($cjck.paths.l0Root){ $L0Root=[string]$cjck.paths.l0Root } }catch{}
 $script:out=@()
 function Say([string]$m){ $script:out+=$m }
 $bad=0
@@ -27,7 +41,7 @@ if($null -ne $cj){
   Say ('六处生成物：'+$rGood+'/'+$rTotal+' 件标记在场')
 }
 if($null -ne $cj){
-  $confMap=@{ 1=@('F:\crystal\conf\lock1-selfstop.json','lock1'); 2=@('F:\crystal-kill\conf\lock2-kill.json','lock2'); 3=@('F:\crystal-l0\conf\lock3-fallback.json','lock3') }
+  $confMap=@{ 1=@((Join-Path $DetHome 'conf\lock1-selfstop.json'),'lock1'); 2=@((Join-Path $KillRoot 'conf\lock2-kill.json'),'lock2'); 3=@((Join-Path $L0Root 'conf\lock3-fallback.json'),'lock3') }
   foreach($k in @(1,2,3)){
     $cp=$confMap[$k][0]; $lk=$confMap[$k][1]
     try{
@@ -41,7 +55,7 @@ if($null -ne $cj){
 }
 try{
   $truth=[Text.Encoding]::UTF8.GetString([IO.File]::ReadAllBytes((Join-Path $Plugin 'data\crystal\truth.json'))) | ConvertFrom-Json
-  $ep=[Text.Encoding]::UTF8.GetString([IO.File]::ReadAllBytes('F:\crystal\data\endpoints.json')) | ConvertFrom-Json
+  $ep=[Text.Encoding]::UTF8.GetString([IO.File]::ReadAllBytes((Join-Path $DataHome 'endpoints.json'))) | ConvertFrom-Json
   $tp2=[int]$truth.health.guiPort; $ep2=[int]$ep.gui.port
   if($tp2 -eq $ep2 -and $tp2 -gt 0){ Say ('端口：truth.guiPort='+$tp2+' = endpoints.gui.port='+$ep2+' 一致') }
   else{ Say ('端口漂移：truth='+$tp2+' endpoints='+$ep2); $bad++ }

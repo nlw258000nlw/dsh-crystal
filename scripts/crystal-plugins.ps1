@@ -1,14 +1,25 @@
 ﻿# crystal-plugins.ps1 - 旧插件纳管只读盘点（P3 第一段）：三源对账，只读不写现网
-# 源1=插件目录 C:\Users\丽微\.dsh\plugins（目录名=包名）；源2=profiles\desktop\package.json（dependencies key=包名、dsh.profile.bundles 条目=包名）；源3=crystal.json plugins（name）
+# 源1=插件目录 $plugDir（目录名=包名）；源2=profiles\desktop\package.json（dependencies key=包名、dsh.profile.bundles 条目=包名）；源3=crystal.json plugins（name）
 # 归一口径：@scope/name → scope-name（去 @、/ 变 -、小写）；目录名与包名按归一后比对
-# 产出=F:\crystal\data\plugins-inventory.json（schemaVersion 1、generatedAt、sources 三源 mtime、entries{name,source,version,status=covered|registered|pending|unknown,evidence}）
-param([string]$OutFile='F:\crystal\data\plugins-inventory.json')
+# 产出=$OutFile（schemaVersion 1、generatedAt、sources 三源 mtime、entries{name,source,version,status=covered|registered|pending|unknown,evidence}）
+param([string]$OutFile='')
 $ErrorActionPreference='SilentlyContinue'
 $enc=New-Object Text.UTF8Encoding($false)
 function Norm-Pkg([string]$n){ return ($n -replace '^@','' -replace '/','-').ToLower() }
-$plugDir='C:\Users\丽微\.dsh\plugins'
-$pkgJson='C:\Users\丽微\.dsh\profiles\desktop\package.json'
-$crystalJson='C:\Users\丽微\.dsh\plugins\dsh-crystal\crystal.json'
+$Plugin=(Get-Item (Join-Path $PSScriptRoot '..')).FullName
+$DetF=Join-Path $Plugin 'data\detected.json'
+$DataHome=Join-Path $env:LOCALAPPDATA 'crystal\data'
+$plugDir=Join-Path $env:USERPROFILE '.dsh\plugins'
+$pkgJson=Join-Path $env:USERPROFILE '.dsh\profiles\desktop\package.json'
+if(Test-Path $DetF){
+  try{
+    $det=Get-Content $DetF -Raw -Encoding UTF8 | ConvertFrom-Json
+    if($det.dataRoot){ $DataHome=[string]$det.dataRoot }
+    if($det.userHome){ $plugDir=Join-Path ([string]$det.userHome) '.dsh\plugins'; $pkgJson=Join-Path ([string]$det.userHome) '.dsh\profiles\desktop\package.json' }
+  }catch{}
+}
+if($OutFile -eq ''){ $OutFile=Join-Path $DataHome 'plugins-inventory.json' }
+$crystalJson=Join-Path $Plugin 'crystal.json'
 $allDirs=@(Get-ChildItem $plugDir -Directory -ErrorAction SilentlyContinue | ForEach-Object { $_.Name })
 $bakDirs=@($allDirs | Where-Object { $_ -like '*.bak-*' })
 $dirNames=@($allDirs | Where-Object { $_ -notlike '*.bak-*' })
